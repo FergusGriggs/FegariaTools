@@ -4,7 +4,7 @@ from pygame.locals import *
 from enum import Enum
 
 import commons
-from widget import OffsetData
+from widget import OffsetData, WidgetType
 
 
 class SplitType(Enum):
@@ -13,7 +13,8 @@ class SplitType(Enum):
 
 
 class UiContainer:
-    def __init__(self, parent_rect):
+    def __init__(self, container_id, parent_rect):
+        self.container_id = container_id
         self.parent_rect = parent_rect
 
         if self.parent_rect is None:
@@ -40,7 +41,7 @@ class UiContainer:
         if not self.has_split:
             self.widgets.append(widget)
 
-    def add_split(self, split_type, split_offset, split_draggable):
+    def add_split(self, split_type, split_offset, split_draggable, container_id_1, container_id_2):
         if not self.has_split:
             self.has_split = True
             self.split_type = split_type
@@ -51,9 +52,8 @@ class UiContainer:
             self.update_split_rects()
             self.update_split_line_rect()
 
-            self.split_children = (UiContainer(self.split_rects[0]), UiContainer(self.split_rects[1]))
-
-        return self.split_children
+            self.split_children = (UiContainer(container_id_1, self.split_rects[0]),
+                                   UiContainer(container_id_2, self.split_rects[1]))
 
     def update(self, parent_rect):
         if parent_rect is not None:
@@ -192,3 +192,21 @@ class UiContainer:
                     return widget
         return None
 
+    def find_container(self, container_id):
+        if self.has_split:
+            for split_index in range(2):
+                container = self.split_children[split_index].find_container(container_id)
+                if container is not None:
+                    return container
+        elif self.container_id == container_id:
+            return self
+        return None
+
+    def deselect_all(self):
+        if self.has_split:
+            for split_index in range(2):
+                self.split_children[split_index].deselect_all()
+        else:
+            for widget in self.widgets:
+                if widget.type == WidgetType.LINE_SELECTOR:
+                    widget.selected = False

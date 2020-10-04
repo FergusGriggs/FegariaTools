@@ -47,6 +47,13 @@ def save_item_data():
     write_file.close()
 
 
+def find_element_by_attribute(elements, attribute_name, attribute_value):
+    for element in elements:
+        for attribute in element:
+            if attribute == attribute_name and element[attribute] == attribute_value:
+                return element
+
+
 def edit_test():
     global tile_data
     for element in tile_data["elements"]["element"]:

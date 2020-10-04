@@ -17,18 +17,21 @@ class Tool:
         self.default_w = 800
         self.default_h = 600
 
-        self.main_window = UiContainer(Rect(0, 0, self.default_w, self.default_h))
+        self.main_window = UiContainer("window", Rect(0, 0, self.default_w, self.default_h))
 
     def create_windows(self):
-        main_splits = self.main_window.add_split(SplitType.VERTICAL, 45, True)
-        main_splits[1].background_colour = (90, 90, 90)
+        self.main_window.add_split(SplitType.VERTICAL, 45, True, "window_top_bar", "window_main")
 
-        main_splits[0].add_widget(ImageWidget("tool_icon", self.icon))
-        main_splits[0].add_widget(SameLineWidget(10))
-        main_splits[0].add_widget(TextWidget("tool_title", self.name, font=commons.font_30))
-        main_splits[0].add_widget(SameLineWidget(10))
-        main_splits[0].add_widget(CheckboxWidget("test_checkbox_2", size=30))
-        main_splits[0].find_widget("test_checkbox_2").hide()
+        window_top_bar = self.find_container("window_top_bar")
+        window_top_bar.add_widget(ImageWidget("tool_icon", self.icon))
+        window_top_bar.add_widget(SameLineWidget(10))
+        window_top_bar.add_widget(TextWidget("tool_title", self.name, font=commons.font_30))
+        window_top_bar.add_widget(SameLineWidget(10))
+        window_top_bar.add_widget(CheckboxWidget("test_checkbox_2", size=30))
+        window_top_bar.find_widget("test_checkbox_2").hide()
+
+        window_main = self.find_container("window_main")
+        window_main.background_colour = (90, 90, 90)
 
     def init(self):
         pygame.display.set_caption(self.name)
@@ -72,4 +75,7 @@ class Tool:
         commons.current_tool = None
 
     def widget_altered(self, widget):
-        pass
+        print(widget.widget_id)
+
+    def find_container(self, container_id):
+        return self.main_window.find_container(container_id)

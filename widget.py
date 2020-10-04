@@ -180,7 +180,6 @@ class LineSelectorWidget(Widget):
             self.hovered = True
             if commons.first_mouse_action and pygame.mouse.get_pressed()[0]:
                 commons.first_mouse_action = False
-                self.selected = not self.selected
                 altered_widgets.append(self)
 
     def draw(self):
