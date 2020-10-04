@@ -3,18 +3,55 @@ import xmltodict
 from collections import OrderedDict
 
 
-def test_xml():
-    read_file = open("test.xml", "r")
-    data = xmltodict.parse(read_file.read())
+tile_data = None
+item_data = None
+
+
+# Tile data
+def load_tile_data():
+    global tile_data
+    read_file = open("res/data/tile_data.xml", "r")
+    tile_data = xmltodict.parse(read_file.read())
     read_file.close()
 
-    for element in data["elements"]["element"]:
+
+def unload_tile_data():
+    global tile_data
+    tile_data = None
+
+
+def save_tile_data():
+    write_file = open("res/data/tile_data.xml", "w")
+    unparsed_data = xmltodict.unparse(tile_data, pretty=True)
+    write_file.write(unparsed_data)
+    write_file.close()
+
+
+# Item data
+def load_item_data():
+    global item_data
+    read_file = open("res/data/item_data.xml", "r")
+    item_data = xmltodict.parse(read_file.read())
+    read_file.close()
+
+
+def unload_item_data():
+    global item_data
+    item_data = None
+
+
+def save_item_data():
+    write_file = open("res/data/item_data.xml", "w")
+    unparsed_data = xmltodict.unparse(item_data, pretty=True)
+    write_file.write(unparsed_data)
+    write_file.close()
+
+
+def edit_test():
+    global tile_data
+    for element in tile_data["elements"]["element"]:
         for attribute in element:
             print(attribute + ": ", element[attribute])
 
-    data["elements"]["element"].append(OrderedDict([("@id", 4), ("@name", "Grass"), ("@strength", 1)]))
+    tile_data["elements"]["element"].append(OrderedDict([("@id", 4), ("@name", "Grass"), ("@strength", 1)]))
 
-    write_file = open("test2.xml", "w")
-    unparsed_data = xmltodict.unparse(data, pretty=True)
-    write_file.write(unparsed_data)
-    write_file.close()

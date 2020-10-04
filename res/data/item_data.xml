@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items>
+	<item id="0" name="Air" strength="0"></item>
+	<item id="1" name="Dirt" strength="1"></item>
+	<item id="2" name="Stone" strength="3"></item>
+	<item id="3" name="Wood" strength="2"></item>
+	<item id="4" name="Log" strength="1"></item>
+</items>

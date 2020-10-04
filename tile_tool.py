@@ -93,9 +93,6 @@ class TileTool(Tool):
 
         tile_properties.add_widget(TextInputWidget("text_input", "Change Me!", TextInputType.STRING))
 
-    def frame_update(self):
-        super().frame_update()
-
     def widget_altered(self, widget):
         if widget.type == WidgetType.CHECKBOX:
             if widget.widget_id == "test_checkbox_1":

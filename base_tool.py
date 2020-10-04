@@ -6,6 +6,7 @@ from pygame.locals import *
 import commons
 from ui_container import UiContainer, SplitType
 from widget import TextWidget, SameLineWidget, CheckboxWidget, ImageWidget
+import game_data
 
 
 class Tool:

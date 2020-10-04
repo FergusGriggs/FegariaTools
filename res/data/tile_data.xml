@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tiles>
+	<tile id="0" name="Air" strength="0"></tile>
+	<tile id="1" name="Dirt" strength="1"></tile>
+	<tile id="2" name="Stone" strength="3"></tile>
+	<tile id="3" name="Wood" strength="2"></tile>
+</tiles>
