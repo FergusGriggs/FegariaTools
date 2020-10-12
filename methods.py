@@ -1,0 +1,74 @@
+import pygame
+from pygame.locals import *
+import commons
+
+
+def get_char_index(string, font, x_offset):
+    current_char_index = 0
+    current_length = 0
+    for char in string:
+        char_length = font.size(char)[0]
+        if current_length + char_length > x_offset:
+            break
+        else:
+            current_length += char_length
+            current_char_index += 1
+
+    return current_char_index
+
+
+def get_size_up_to_char_index(string, font, index):
+    sub_str = string[:index]
+    return font.size(sub_str)[0]
+
+
+avoid_keys = [
+    pygame.K_TAB, pygame.K_CAPSLOCK, pygame.K_LSHIFT,
+    pygame.K_RSHIFT, pygame.K_LCTRL, pygame.K_RCTRL,
+    pygame.K_LALT, pygame.K_RALT, pygame.K_RETURN,
+    pygame.K_NUMLOCK, pygame.K_ESCAPE, pygame.K_DELETE,
+    pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN
+]
+
+
+def str_from_key_event(key_event):
+    if key_event.key in avoid_keys:
+        return None
+    return key_event.unicode
+
+
+numeric_chars = [
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "-"
+]
+
+
+def limit_to_numeric_chars(char, allow_period):
+    if char in numeric_chars or (allow_period and char == '.'):
+        return char
+    return None
+
+
+def clamp_int_0_255(value):
+    return int(min(255, max(0, value)))
+
+
+def modify_col(col, mod):
+    return clamp_int_0_255(col[0] * mod), clamp_int_0_255(col[1] * mod), clamp_int_0_255(col[2] * mod)
+
+
+def safe_load_image(path):
+    try:
+        return pygame.image.load(path)
+    except pygame.error:
+        return commons.placeholder_image
+
+
+def draw_rect_clipped(surface, colour, rect, width, clipping_rect):
+    new_rect = rect.clip(clipping_rect)
+    if new_rect.w == 0 or new_rect.h == 0:
+        return
+    render_surface = pygame.Surface((new_rect.w, new_rect.h))
+    render_surface.fill((255, 0, 255))
+    render_surface.set_colorkey((255, 0, 255))
+    pygame.draw.rect(render_surface, colour, Rect(rect.x - new_rect.x, rect.y - new_rect.y, rect.w, rect.h), width)
+    surface.blit(render_surface, new_rect)

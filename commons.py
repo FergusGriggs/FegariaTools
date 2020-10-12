@@ -18,6 +18,8 @@ lt_icon = pygame.image.load("res/images/icons/100x100/loot_tool.png")
 st_icon = pygame.image.load("res/images/icons/100x100/structure_tool.png")
 tt_icon = pygame.image.load("res/images/icons/100x100/tile_tool.png")
 
+placeholder_image = pygame.image.load("res/images/misc/placeholder.png")
+
 window = None
 current_tool = None
 
@@ -33,6 +35,16 @@ first_mouse_hover = False
 text_col = (255, 255, 255)
 back_col = (50, 50, 50)
 border_col = (90, 90, 90)
+hover_border_col = (128, 128, 128)
+selected_border_col = (192, 192, 192)
+
+item_tool_col = (65, 141, 255)
+tile_tool_col = (7, 155, 115)
+
+colour_key_col = (255, 0, 255)
+
+delta_time = 0.0
+target_fps = 144
 
 default_cursor = None
 size_cursor_x = None
@@ -40,6 +52,7 @@ size_cursor_y = None
 button_cursor = None
 text_input_cursor = None
 current_cursor = None
+long_boi_cursor = None
 
 text_hover_strings = (
   "  .... ....     ",
@@ -80,8 +93,42 @@ button_cursor_strings = (
   "    .XXXXXXXXXX.        ",
   "    .XXXXXXXXXX.        ",
   "     .XXXXXXXX.         ",
+  "      .XXXXXX.          ",
+  "       ......           ",
+  "                        ",
+  "                        ")
+
+long_boi_cursor_strings = (
+  "     ..                 ",
+  "    .XX.                ",
+  "    .XX.                ",
+  "    .XX.                ",
+  "    .XX.                ",
+  "    .XX.                ",
+  "    .XX.                ",
+  "    .XX.                ",
+  "    .XX.                ",
+  "    .XX.                ",
+  "    .XX.                ",
+  "    .XX.                ",
+  "    .XX.                ",
+  "    .XX...              ",
+  "    .XX.XX...           ",
+  "    .XX.XX.XX..         ",
+  "    .XX.XX.XX.X.        ",
+  "... .XX.XX.XX.XX.       ",
+  ".XX..XXXXXXXX.XX.       ",
+  ".XXX.XXXXXXXXXXX.       ",
+  " .XXXXXXXXXXXXXX.       ",
+  "  .XXXXXXXXXXXXX.       ",
+  "  .XXXXXXXXXXXXX.       ",
+  "   .XXXXXXXXXXXX.       ",
+  "   .XXXXXXXXXXX.        ",
+  "    .XXXXXXXXXX.        ",
+  "    .XXXXXXXXXX.        ",
   "     .XXXXXXXX.         ",
-  "     ..........         ",
+  "      .XXXXXX.          ",
+  "       ......           ",
   "                        ",
   "                        ")
 

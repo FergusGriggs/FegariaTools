@@ -19,19 +19,14 @@ class TileTool(Tool):
 
         self.name = "Tile Tool"
         self.icon = commons.tt_icon_small
+        self.accent_col = commons.tile_tool_col
 
         super().init()
 
     def create_windows(self):
         super().create_windows()
 
-        self.main_window.split_line_colour = (8, 179, 132)
-
-        window_top_bar = self.find_container("window_top_bar")
-        window_top_bar.add_widget(SameLineWidget(10))
-        window_top_bar.add_widget(ButtonWidget("export_data", "Export"))
-        window_top_bar.add_widget(SameLineWidget(10))
-        window_top_bar.add_widget(ButtonWidget("load_data", "Load"))
+        self.main_window.split_line_colour = self.light_accent_col
 
         window_main = self.find_container("window_main")
         window_main.draw_line = False
@@ -40,11 +35,11 @@ class TileTool(Tool):
 
         tile_list_section = self.find_container("tile_list_section")
         tile_list_section.add_split(SplitType.VERTICAL, 40, False, "tile_list_title", "tile_list")
-        tile_list_section.split_line_colour = (4, 90, 66)
+        tile_list_section.split_line_colour = self.dark_accent_col
 
         tile_list_title = self.find_container("tile_list_title")
         tile_list_title.add_widget(TextWidget("tile_list_title", "Tiles", font=commons.font_30))
-        tile_list_title.background_colour = (6, 135, 99)
+        tile_list_title.background_colour = self.accent_col
 
         tile_list = self.find_container("tile_list")
         tile_list.background_colour = (60, 60, 60)
@@ -64,11 +59,11 @@ class TileTool(Tool):
 
         tile_properties_section = self.find_container("tile_properties_section")
         tile_properties_section.add_split(SplitType.VERTICAL, 40, False, "tile_properties_title", "tile_properties")
-        tile_properties_section.split_line_colour = (4, 90, 66)
+        tile_properties_section.split_line_colour = self.dark_accent_col
 
         tile_properties_title = self.find_container("tile_properties_title")
         tile_properties_title.add_widget(TextWidget("tile_properties_title", "Tile Properties", font=commons.font_30))
-        tile_properties_title.background_colour = (6, 135, 99)
+        tile_properties_title.background_colour = self.accent_col
 
         tile_properties = self.find_container("tile_properties")
         # tile_properties.add_widget(TextWidget("random_text_0", "Some text"))

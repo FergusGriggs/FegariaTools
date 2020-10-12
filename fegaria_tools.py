@@ -34,6 +34,8 @@ compiled_cursor = pygame.cursors.compile(pygame.cursors.sizer_y_strings)
 commons.size_cursor_y = (16, 24), (5, 9), compiled_cursor[0], compiled_cursor[1]
 compiled_cursor = pygame.cursors.compile(commons.text_hover_strings)
 commons.text_input_cursor = (16, 16), (5, 6), compiled_cursor[0], compiled_cursor[1]
+compiled_cursor = pygame.cursors.compile(commons.long_boi_cursor_strings)
+commons.long_boi_cursor = (24, 32), (5, 0), compiled_cursor[0], compiled_cursor[1]
 compiled_cursor = None
 
 commons.current_tool = None
@@ -41,8 +43,14 @@ commons.current_tool = None
 commons.current_cursor = commons.default_cursor
 current_cursor = commons.default_cursor
 
+pygame.key.set_repeat(250, 40)
+
+clock = pygame.time.Clock()
+
 running = True
 while running:
+    commons.delta_time = clock.tick(commons.target_fps) * 0.001
+
     for event in pygame.event.get():
         if commons.current_tool is None:
             if event.type == pygame.QUIT:
@@ -77,9 +85,8 @@ while running:
         current_cursor = commons.current_cursor
         pygame.mouse.set_cursor(*current_cursor)
 
-    commons.window.fill((68, 68, 68))
-
     if commons.current_tool is None:
+        commons.window.fill((68, 68, 68))
         commons.window.blit(menu_text, (5, 0))
         commons.window.blit(commons.ct_icon, (0, 50))
         commons.window.blit(commons.et_icon, (100, 50))

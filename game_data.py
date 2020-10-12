@@ -54,6 +54,20 @@ def find_element_by_attribute(elements, attribute_name, attribute_value):
                 return element
 
 
+def reassign_element_ids(elements):
+    correct_id = 0
+    for element in elements:
+        element["@id"] = str(correct_id)
+        correct_id += 1
+
+
+def remove_element_by_attribute(elements, attribute_name, attribute_value):
+    for element in elements:
+        for attribute in element:
+            if attribute == attribute_name and element[attribute] == attribute_value:
+                elements.remove(element)
+
+
 def edit_test():
     global tile_data
     for element in tile_data["elements"]["element"]:
