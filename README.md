@@ -7,7 +7,11 @@ This is a collection of tools that can be used to create data for Fegaria. It us
 ## Crafting Tool
 ## Entity Tool
 ## Item Tool
-The item tool allows for information about items to be changed including the name, description, tags and item image. This tool exports a data file and a  texture atlas image.
+### About
+The item tool allows for information about items to be changed including the name, description, tags and item image.
+### Exports to
+- "item_data.xml" data file
+- "item_images.png" texture atlas file
 ## Loot Tool
 ## Structure Tool
 ## Tile Tool
