@@ -43,7 +43,7 @@ class Tool:
 
     def init(self):
         pygame.display.set_caption(self.name)
-        pygame.display.set_icon(self.icon)
+        pygame.display.set_icon(pygame.transform.scale(self.icon, (32, 32)))
 
         self.update_alt_accent_colours()
 

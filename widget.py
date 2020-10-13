@@ -231,7 +231,7 @@ class LineSelectorWidget(Widget):
         self.hovered = False
 
     def update_position(self, container_rect, offset_data):
-        self.rect = Rect(0, offset_data.vertical, container_rect.w, offset_data.line_height)
+        self.rect = Rect(-5, offset_data.vertical, commons.screen_w, offset_data.line_height)
 
     def frame_update(self, altered_widgets, relative_mouse_pos):
         self.hovered = False

@@ -50,6 +50,7 @@ clock = pygame.time.Clock()
 running = True
 while running:
     commons.delta_time = clock.tick(commons.target_fps) * 0.001
+    commons.mouse_diff = pygame.mouse.get_rel()
 
     for event in pygame.event.get():
         if commons.current_tool is None:
@@ -60,8 +61,14 @@ while running:
 
     if not pygame.mouse.get_pressed()[0]:
         commons.first_mouse_action = True
+        commons.dragging_object = False
+
     commons.first_mouse_hover = True
     commons.current_cursor = commons.default_cursor
+
+    if commons.dragging_object:
+        commons.first_mouse_action = False
+        commons.first_mouse_hover = False
 
     if commons.current_tool is None:
         if pygame.mouse.get_pressed()[0]:

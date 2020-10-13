@@ -39,13 +39,24 @@ class UiContainer:
         self.background_colour = (68, 68, 68)
 
         self.content_overflow_x = False
+        self.content_size_x = 0
         self.scroll_x_offset = 0
         self.scroll_velocity_x = 0
         self.scroll_bar_x_size = 0
+        self.scroll_bar_rect_x = None
+        self.dragging_scroll_bar_x = False
+        self.scroll_bar_grab_offset_x = 0
+        self.scroll_bar_hover_x = False
+
         self.content_overflow_y = False
+        self.content_size_y = 0
         self.scroll_y_offset = 0
         self.scroll_velocity_y = 0
         self.scroll_bar_y_size = 0
+        self.scroll_bar_rect_y = None
+        self.dragging_scroll_bar_y = False
+        self.scroll_bar_grab_offset_y = 0
+        self.scroll_bar_hover_y = False
 
         self.last_relative_mouse_pos = (0, 0)
 
@@ -93,6 +104,44 @@ class UiContainer:
         else:
             self.last_relative_mouse_pos = relative_mouse_pos
             self.update_scroll_velocity()
+
+            self.scroll_bar_hover_x = False
+            self.scroll_bar_hover_y = False
+
+            if self.content_overflow_y:
+                pixel_offset = int((self.parent_rect.h - self.scroll_bar_y_size) * (self.scroll_y_offset / (self.content_size_y - self.parent_rect.h)))
+                self.scroll_bar_rect_y = Rect(self.parent_rect.w - commons.scroll_bar_width_x, pixel_offset, commons.scroll_bar_width_x, self.scroll_bar_y_size)
+                if commons.first_mouse_hover and self.scroll_bar_rect_y.collidepoint(*relative_mouse_pos):
+                    commons.first_mouse_hover = False
+                    self.scroll_bar_hover_y = True
+                    if commons.first_mouse_action and pygame.mouse.get_pressed()[0]:
+                        commons.first_mouse_action = False
+                        self.dragging_scroll_bar_y = True
+                        self.scroll_bar_grab_offset_y = relative_mouse_pos[1] - pixel_offset
+                        commons.dragging_object = True
+
+            if self.content_overflow_x:
+                pixel_offset = int((self.parent_rect.w - self.scroll_bar_x_size) * (self.scroll_x_offset / (self.content_size_x - self.parent_rect.w)))
+                self.scroll_bar_rect_x = Rect(pixel_offset, self.parent_rect.h - commons.scroll_bar_width_y, self.scroll_bar_x_size, commons.scroll_bar_width_y)
+                if commons.first_mouse_hover and self.scroll_bar_rect_x.collidepoint(*relative_mouse_pos):
+                    commons.first_mouse_hover = False
+                    self.scroll_bar_hover_x = True
+                    if commons.first_mouse_action and pygame.mouse.get_pressed()[0]:
+                        commons.first_mouse_action = False
+                        self.dragging_scroll_bar_x = True
+                        self.scroll_bar_grab_offset_x = relative_mouse_pos[0] - pixel_offset
+                        commons.dragging_object = True
+
+            if self.dragging_scroll_bar_x:
+                scroll_to_offset = int(((relative_mouse_pos[0] - self.scroll_bar_grab_offset_x) / (self.parent_rect.w - self.scroll_bar_x_size)) * (self.content_size_x - self.parent_rect.w))
+                self.scroll_container_to_value((scroll_to_offset, None))
+            if self.dragging_scroll_bar_y:
+                scroll_to_offset = int(((relative_mouse_pos[1] - self.scroll_bar_grab_offset_y) / (self.parent_rect.h - self.scroll_bar_y_size)) * (self.content_size_y - self.parent_rect.h))
+                self.scroll_container_to_value((None, scroll_to_offset))
+
+            if not pygame.mouse.get_pressed()[0]:
+                self.dragging_scroll_bar_x = False
+                self.dragging_scroll_bar_y = False
 
             scrolled_mouse_pos = (relative_mouse_pos[0] + self.scroll_x_offset, relative_mouse_pos[1] + self.scroll_y_offset)
 
@@ -165,22 +214,28 @@ class UiContainer:
         for widget in self.widgets:
             widget.update_position(self.parent_rect, offset_data)
 
-        if offset_data.max_horizontal > self.parent_rect.w:
-            self.content_overflow_x = True
-            self.scroll_bar_x_size = int(self.parent_rect.w * (self.parent_rect.w / offset_data.max_horizontal))
+        if offset_data.max_horizontal + commons.scroll_bar_width_y * 2 > self.parent_rect.w:
+            self.content_size_x = offset_data.max_horizontal + commons.scroll_bar_width_y * 2
+            if self.content_size_x > 0:
+                self.content_overflow_x = True
+                self.scroll_bar_x_size = int(self.parent_rect.w * (self.parent_rect.w / self.content_size_x))
         else:
             self.content_overflow_x = False
             self.scroll_x_offset = 0
 
         if offset_data.vertical + offset_data.line_height > self.parent_rect.h:
-            self.content_overflow_y = True
-            self.scroll_bar_y_size = int(self.parent_rect.h * (self.parent_rect.h / offset_data.vertical + offset_data.line_height))
+            self.content_size_y = offset_data.vertical + offset_data.line_height
+            if self.content_size_y > 0:
+                self.content_overflow_y = True
+                if self.content_overflow_x:
+                    self.content_size_y += + commons.scroll_bar_width_x * 2
+                self.scroll_bar_y_size = int(self.parent_rect.h * (self.parent_rect.h / self.content_size_y))
         else:
             self.content_overflow_y = False
             self.scroll_y_offset = 0
 
-        self.widget_surface_rect.w = max(self.parent_rect.w, offset_data.max_horizontal)
-        self.widget_surface_rect.h = max(self.parent_rect.h, offset_data.vertical + offset_data.line_height)
+        self.widget_surface_rect.w = max(self.parent_rect.w, self.content_size_x)
+        self.widget_surface_rect.h = max(self.parent_rect.h, self.content_size_y)
 
     def render_widget_surface(self):
         self.widget_surface = pygame.Surface((self.widget_surface_rect.w, self.widget_surface_rect.h))
@@ -199,9 +254,30 @@ class UiContainer:
         else:
             commons.window.blit(self.widget_surface, relative_position, Rect(self.scroll_x_offset, self.scroll_y_offset,
                                                                              self.parent_rect.w, self.parent_rect.h))
-
             for widget in self.widgets:
                 widget.draw(relative_position, (self.scroll_x_offset, self.scroll_y_offset), self.parent_rect)
+
+            if self.content_overflow_x and self.scroll_bar_rect_x is not None:
+                colour = commons.border_col
+                if self.dragging_scroll_bar_x:
+                    colour = commons.selected_border_col
+                elif self.scroll_bar_hover_x:
+                    colour = commons.hover_border_col
+                pygame.draw.rect(commons.window, colour,
+                                 Rect(relative_position[0] + self.scroll_bar_rect_x.x,
+                                      relative_position[1] + self.scroll_bar_rect_x.y,
+                                      self.scroll_bar_rect_x.w, self.scroll_bar_rect_x.h), 0)
+
+            if self.content_overflow_y and self.scroll_bar_rect_y is not None:
+                colour = commons.border_col
+                if self.dragging_scroll_bar_y:
+                    colour = commons.selected_border_col
+                elif self.scroll_bar_hover_y:
+                    colour = commons.hover_border_col
+                pygame.draw.rect(commons.window, colour,
+                                 Rect(relative_position[0] + self.scroll_bar_rect_y.x,
+                                      relative_position[1] + self.scroll_bar_rect_y.y,
+                                      self.scroll_bar_rect_y.w, self.scroll_bar_rect_y.h), 0)
 
     def process_event(self, event):
         if self.has_split:
@@ -251,6 +327,12 @@ class UiContainer:
             elif self.scroll_y_offset > self.widget_surface_rect.h - self.parent_rect.h:
                 self.scroll_y_offset = self.widget_surface_rect.h - self.parent_rect.h
                 self.scroll_velocity_y = 0.0
+
+    def scroll_container_to_value(self, offset_value):
+        if self.content_overflow_x and offset_value[0] is not None:
+            self.scroll_x_offset = min(self.widget_surface_rect.w - self.parent_rect.w, max(0, offset_value[0]))
+        if self.content_overflow_y and offset_value[1] is not None:
+            self.scroll_y_offset = min(self.widget_surface_rect.h - self.parent_rect.h, max(0, offset_value[1]))
 
     def draw_split_line(self, relative_position):
         if self.draw_line or self.split_line_hovering:

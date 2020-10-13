@@ -31,6 +31,7 @@ font_60 = None
 
 first_mouse_action = False
 first_mouse_hover = False
+dragging_object = False
 
 text_col = (255, 255, 255)
 back_col = (50, 50, 50)
@@ -45,6 +46,11 @@ colour_key_col = (255, 0, 255)
 
 delta_time = 0.0
 target_fps = 144
+
+scroll_bar_width_x = 8
+scroll_bar_width_y = 10
+
+mouse_diff = (0, 0)
 
 default_cursor = None
 size_cursor_x = None

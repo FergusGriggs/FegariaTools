@@ -38,7 +38,7 @@ class ItemTool(Tool):
         window_main = self.find_container("window_main")
         window_main.draw_line = False
 
-        window_main.add_split(SplitType.HORIZONTAL, 200, True, "item_list_section", "item_properties_section")
+        window_main.add_split(SplitType.HORIZONTAL, 225, True, "item_list_section", "item_properties_section")
 
         item_list_section = self.find_container("item_list_section")
         item_list_section.add_split(SplitType.VERTICAL, 40, False, "item_list_title", "item_list_subsection")
@@ -49,7 +49,7 @@ class ItemTool(Tool):
         item_list_title.background_colour = self.accent_col
 
         item_list_subsection = self.find_container("item_list_subsection")
-        item_list_subsection.add_split(SplitType.VERTICAL, 60, False, "item_list_functions", "item_list")
+        item_list_subsection.add_split(SplitType.VERTICAL, 35, False, "item_list_functions", "item_list")
         item_list_subsection.background_colour = (60, 60, 60)
         item_list_subsection.split_line_colour = (68, 68, 68)
 
@@ -107,7 +107,7 @@ class ItemTool(Tool):
         item_properties.add_widget(TextInputWidget("item_tags_input", item["@tags"], TextInputType.STRING))
         item_properties.add_widget(TextWidget("image_filepath", "Image Filepath:"))
         item_properties.add_widget(SameLineWidget(10))
-        item_properties.add_widget(TextInputWidget("image_file_path_input", item["@image_filepath"], TextInputType.STRING, max_length=45))
+        item_properties.add_widget(TextInputWidget("image_file_path_input", item["@image_filepath"], TextInputType.STRING))
         item_properties.add_widget(TextWidget("image_text", "Item Image:"))
         item_properties.add_widget(SameLineWidget(10))
         item_properties.add_widget(ImageWidget("item_image", methods.safe_load_image(item["@image_filepath"]), image_scale=4.0))
