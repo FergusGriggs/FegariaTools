@@ -38,6 +38,8 @@ class Tool:
         window_top_bar.add_widget(SameLineWidget(10))
         window_top_bar.add_widget(ButtonWidget("load_data", "Load"))
 
+        window_top_bar.set_padding(top=2, left=0)
+
         window_main = self.find_container("window_main")
         window_main.background_colour = (90, 90, 90)
 

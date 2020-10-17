@@ -1,4 +1,6 @@
 import pygame
+import math
+
 from pygame.locals import *
 import commons
 
@@ -72,3 +74,32 @@ def draw_rect_clipped(surface, colour, rect, width, clipping_rect):
     render_surface.set_colorkey((255, 0, 255))
     pygame.draw.rect(render_surface, colour, Rect(rect.x - new_rect.x, rect.y - new_rect.y, rect.w, rect.h), width)
     surface.blit(render_surface, new_rect)
+
+
+def draw_arrow(surface, centre, size, angle):
+    #pygame.draw.rect(surface, commons.text_col, Rect(centre[0] - size, centre[1] - size, size * 2, size * 2), 2)
+
+    arrow_points = [
+        (-0.75, 0.25),
+        (-0.15, -0.6),
+        (0.15, -0.6),
+        (0.75, 0.25),
+        (0.45, 0.45),
+        (0.0, -0.15),
+        (-0.45, 0.45)
+    ]
+
+    final_arrow_points = []
+
+    for point in arrow_points:
+        x = point[0]
+        y = point[1]
+
+        point_angle = math.atan2(y, x)
+        point_dist = math.sqrt(x**2 + y**2)
+
+        point_angle += angle
+
+        final_arrow_points.append((centre[0] + int(math.cos(point_angle) * point_dist * size), centre[1] + int(math.sin(point_angle) * point_dist * size)))
+
+    pygame.draw.polygon(surface, commons.text_col, final_arrow_points)

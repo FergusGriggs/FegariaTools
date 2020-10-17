@@ -47,8 +47,10 @@ colour_key_col = (255, 0, 255)
 delta_time = 0.0
 target_fps = 144
 
-scroll_bar_width_x = 8
-scroll_bar_width_y = 10
+x_scroll_bar_width = 13
+x_scroll_bar_spacing = x_scroll_bar_width * 1.0
+y_scroll_bar_width = 10
+y_scroll_bar_spacing = y_scroll_bar_width * 1.0
 
 mouse_diff = (0, 0)
 

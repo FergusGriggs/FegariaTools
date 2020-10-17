@@ -2,11 +2,20 @@
 import pygame
 from pygame.locals import *
 
+# Other imports
+import math
+
 # Project imports
 import commons
 import methods
 
 from enum import Enum
+
+
+class WidgetBaseType:
+    OBJECT = 0
+    SAME_LINE = 1
+    LINE_MOD = 2
 
 
 class WidgetType:
@@ -18,50 +27,56 @@ class WidgetType:
     LINE_SELECTOR = 5
     BUTTON = 6
     TEXT_INPUT = 7
+    BEGIN_COLLAPSE = 8
+    END_COLLAPSE = 9
 
 
-class OffsetData:
+class WidgetAlignType:
+    LEFT = 0
+    CENTRE = 1
+    RIGHT = 2
+
+
+class ValueRef:
+    def __init__(self, value):
+        self.value = value
+
+
+class WidgetLine:
     def __init__(self):
-        self.horizontal = 0
-        self.max_horizontal = 0
-        self.vertical = 0
-        self.line_height = 0
-        self.new_line = False
-        self.space_width = 0
+        self.widgets = []
+        self.length = 0
+        self.height = 0
+        self.y_pos = 0
+
+    def create_extents(self):
+        self.length = 0
+        self.height = 0
+
+        for widget in self.widgets:
+            if not widget.hidden or widget.type == WidgetType.SAME_LINE:
+                self.length += widget.rect.w
+                self.height = max(widget.rect.h, self.height)
 
 
 class Widget:
     def __init__(self, widget_id):
         self.widget_id = widget_id
         self.type = WidgetType.BASE
+        self.base_type = WidgetBaseType.OBJECT
         self.surface = None
         self.rect = Rect(0, 0, 0, 0)
         self.hidden = True
+        self.hidden_before_collapse = None
 
-    def update_position(self, container_rect, offset_data):
-        if not self.hidden:
-            if offset_data.new_line:
-                if offset_data.horizontal > offset_data.max_horizontal:
-                    offset_data.max_horizontal = offset_data.horizontal
-                offset_data.horizontal = offset_data.space_width
-                offset_data.vertical += offset_data.line_height + 2
-                offset_data.line_height = 0
-            else:
-                offset_data.new_line = True
-                offset_data.horizontal += offset_data.space_width
+        self.ui_container = None
 
-            self.rect.x = 5 + offset_data.horizontal
-            self.rect.y = 2 + offset_data.vertical
-
-            offset_data.horizontal += self.rect.w
-            offset_data.space_width = 0
-
-            if self.rect.h > offset_data.line_height:
-                offset_data.line_height = self.rect.h
-
-        elif offset_data.new_line is False:
-            offset_data.new_line = True
-            offset_data.space_width = 0
+    def set_collapse_hide(self, collapsed):
+        if collapsed:
+            self.hidden_before_collapse = self.hidden
+            self.hidden = collapsed
+        elif self.hidden_before_collapse is not None:
+            self.hidden = self.hidden_before_collapse
 
     def frame_update(self, altered_widgets, relative_mouse_pos):
         pass
@@ -84,6 +99,9 @@ class Widget:
 
     def toggle_hidden(self):
         self.hidden = not self.hidden
+
+    def late_position_update(self, widget_line, ui_container):
+        pass
 
 
 class ImageWidget(Widget):
@@ -116,8 +134,11 @@ class ImageWidget(Widget):
 
         if self.image_scale != image_scale:
             self.image_scale = image_scale
+            current_colour_key = self.surface.get_colorkey()
             self.surface = pygame.transform.scale(self.initial_surface, (int(self.image_scale * self.initial_surface.get_width()),
                                                                  int(self.image_scale * self.initial_surface.get_height())))
+            self.surface.set_colorkey(current_colour_key)
+
         self.rect.w = self.surface.get_width()
         self.rect.h = self.surface.get_height()
 
@@ -139,6 +160,8 @@ class TextWidget(Widget):
             self.font = commons.font_20
         self.colour = colour
 
+        self.text_surface = None
+
         self.render_text()
         self.rect = self.surface.get_rect()
 
@@ -149,7 +172,8 @@ class TextWidget(Widget):
         self.render_text()
 
     def render_text(self):
-        self.surface = self.font.render(self.text, True, self.colour)
+        self.text_surface = self.font.render(self.text, True, self.colour)
+        self.surface = self.text_surface.copy()
 
 
 class SameLineWidget(Widget):
@@ -157,11 +181,9 @@ class SameLineWidget(Widget):
         super().__init__("space")
 
         self.type = WidgetType.SAME_LINE
+        self.base_type = WidgetBaseType.SAME_LINE
         self.space_width = space_width
-
-    def update_position(self, container_rect, offset_data):
-        offset_data.new_line = False
-        offset_data.space_width = self.space_width
+        self.rect = Rect(0, 0, self.space_width, 0)
 
 
 class CheckboxWidget(Widget):
@@ -226,12 +248,10 @@ class LineSelectorWidget(Widget):
         super().__init__(widget_id)
 
         self.type = WidgetType.LINE_SELECTOR
+        self.base_type = WidgetBaseType.LINE_MOD
         self.rect = Rect(0, 0, 0, 0)
         self.selected = False
         self.hovered = False
-
-    def update_position(self, container_rect, offset_data):
-        self.rect = Rect(-5, offset_data.vertical, commons.screen_w, offset_data.line_height)
 
     def frame_update(self, altered_widgets, relative_mouse_pos):
         self.hovered = False
@@ -255,6 +275,9 @@ class LineSelectorWidget(Widget):
                                       Rect(relative_position[0],
                                            relative_position[1],
                                            container_rect.w, container_rect.h))
+
+    def late_position_update(self, widget_line, ui_container):
+        self.rect = Rect(-5, widget_line.y_pos, ui_container.content_size_x + 10, widget_line.height)
 
 
 class ButtonWidget(Widget):
@@ -289,24 +312,26 @@ class ButtonWidget(Widget):
         self.render_surface()
 
     def frame_update(self, altered_widgets, relative_mouse_pos):
-        self.hovered = False
-        if self.rect.collidepoint(*relative_mouse_pos) and commons.first_mouse_hover:
-            commons.first_mouse_hover = False
-            commons.current_cursor = commons.button_cursor
-            self.hovered = True
-            if commons.first_mouse_action and pygame.mouse.get_pressed()[0]:
-                commons.first_mouse_action = False
-                altered_widgets.append(self)
+        if not self.hidden:
+            self.hovered = False
+            if self.rect.collidepoint(*relative_mouse_pos) and commons.first_mouse_hover:
+                commons.first_mouse_hover = False
+                commons.current_cursor = commons.button_cursor
+                self.hovered = True
+                if commons.first_mouse_action and pygame.mouse.get_pressed()[0]:
+                    commons.first_mouse_action = False
+                    altered_widgets.append(self)
 
     def draw(self, relative_position, scroll_offset, container_rect):
-        if self.hovered:
-            methods.draw_rect_clipped(commons.window, commons.hover_border_col,
-                                      Rect(relative_position[0] - scroll_offset[0] + self.rect.x,
-                                           relative_position[1] - scroll_offset[1] + self.rect.y,
-                                           self.rect.w, self.rect.h), 2,
-                                      Rect(relative_position[0],
-                                           relative_position[1],
-                                           container_rect.w, container_rect.h))
+        if not self.hidden:
+            if self.hovered:
+                methods.draw_rect_clipped(commons.window, commons.hover_border_col,
+                                          Rect(relative_position[0] - scroll_offset[0] + self.rect.x,
+                                               relative_position[1] - scroll_offset[1] + self.rect.y,
+                                               self.rect.w, self.rect.h), 2,
+                                          Rect(relative_position[0],
+                                               relative_position[1],
+                                               container_rect.w, container_rect.h))
 
 
 class TextInputType(Enum):
@@ -429,6 +454,8 @@ class TextInputWidget(Widget):
             if len(self.text) == 0:
                 self.text = "0"
         if self.input_type == TextInputType.FLOAT:
+            if self.text == '.':
+                self.text = "0"
             float_val = float(self.text)
             float_val = self.clamp_numeric_value(float_val)
             self.text = str(float_val)
@@ -502,3 +529,77 @@ class TextInputWidget(Widget):
                         surface_needs_update = True
 
         return surface_needs_update
+
+
+class BeginCollapseWidget(TextWidget):
+    def __init__(self, widget_id, text, colour=commons.text_col, font=None, collapsed=True):
+        super().__init__(widget_id, text, colour=colour, font=font)
+
+        self.type = WidgetType.BEGIN_COLLAPSE
+        self.hovered = False
+        self.collapsed = collapsed
+
+    def frame_update(self, altered_widgets, relative_mouse_pos):
+        self.hovered = False
+        if self.rect.collidepoint(*relative_mouse_pos) and commons.first_mouse_hover:
+            commons.first_mouse_hover = False
+            commons.current_cursor = commons.button_cursor
+            self.hovered = True
+            if commons.first_mouse_action and pygame.mouse.get_pressed()[0]:
+                commons.first_mouse_action = False
+                self.toggle_collapse()
+                altered_widgets.append(self)
+
+    def toggle_collapse(self):
+        self.collapsed = not self.collapsed
+        self.update_collapsed_widgets()
+
+    def update_collapsed_widgets(self):
+        collapse_depth = 0
+        in_current_widget = False
+        widgets = self.ui_container.widgets
+        for i in range(len(widgets)):
+            if in_current_widget:
+                widgets[i].set_collapse_hide(self.collapsed)
+
+                if widgets[i].type == WidgetType.BEGIN_COLLAPSE:
+                    collapse_depth += 1
+                elif widgets[i].type == WidgetType.END_COLLAPSE:
+                    collapse_depth -= 1
+
+                    if collapse_depth == 0:
+                        break
+
+            if widgets[i].widget_id == self.widget_id:
+                in_current_widget = True
+                collapse_depth = 1
+
+        self.ui_container.update(None)
+
+    def late_position_update(self, widget_line, ui_container):
+        self.rect = Rect(ui_container.padding_left, widget_line.y_pos, ui_container.content_size_x - ui_container.padding_left - ui_container.padding_right, widget_line.height)
+        self.render_surface()
+
+    def render_surface(self):
+        self.surface = pygame.Surface((self.rect.w, self.rect.h))
+        self.surface.fill(commons.back_col)
+        self.surface.blit(self.text_surface, (25, 0))
+        if self.collapsed:
+            methods.draw_arrow(self.surface, (11, 12), 10, math.pi * 0.5)
+        else:
+            methods.draw_arrow(self.surface, (11, 12), 10, math.pi)
+
+    def set_text(self, new_text):
+        self.text = new_text
+        self.render_text()
+        self.render_surface()
+
+
+class EndCollapseWidget(Widget):
+    def __init__(self,):
+        super().__init__("end_collapse")
+
+        self.type = WidgetType.END_COLLAPSE
+        self.base_type = WidgetBaseType.OBJECT
+
+        self.rect = Rect(0, 0, 0, 0)

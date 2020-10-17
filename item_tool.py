@@ -23,6 +23,9 @@ class ItemTool(Tool):
 
         game_data.load_item_data()
 
+        self.item_image_scale = 4.0
+        self.item_image_colourkey_active = True
+
         super().init()
 
         self.current_item = game_data.find_element_by_attribute(game_data.item_data["items"]["item"], "@id", "0")
@@ -58,10 +61,12 @@ class ItemTool(Tool):
         item_list_functions.add_widget(ButtonWidget("add_new_item", "Add New"))
         item_list_functions.add_widget(SameLineWidget(10))
         item_list_functions.add_widget(ButtonWidget("delete_selected_item", "Delete"))
+        item_list_functions.set_widget_align_type(WidgetAlignType.CENTRE)
         # Add drop-down widget when it exists to change the list sort type
 
         item_list = self.find_container("item_list")
         item_list.background_colour = (60, 60, 60)
+        item_list.make_scrollable()
 
         item_properties_section = self.find_container("item_properties_section")
         item_properties_section.add_split(SplitType.VERTICAL, 40, False, "item_properties_title", "item_properties")
@@ -70,6 +75,9 @@ class ItemTool(Tool):
         item_properties_title = self.find_container("item_properties_title")
         item_properties_title.add_widget(TextWidget("item_properties_title", "Item Properties", font=commons.font_30))
         item_properties_title.background_colour = self.accent_col
+
+        item_properties = self.find_container("item_properties")
+        item_properties.make_scrollable()
 
         self.update_item_list()
 
@@ -110,7 +118,9 @@ class ItemTool(Tool):
         item_properties.add_widget(TextInputWidget("image_file_path_input", item["@image_filepath"], TextInputType.STRING))
         item_properties.add_widget(TextWidget("image_text", "Item Image:"))
         item_properties.add_widget(SameLineWidget(10))
-        item_properties.add_widget(ImageWidget("item_image", methods.safe_load_image(item["@image_filepath"]), image_scale=4.0))
+        item_properties.add_widget(ImageWidget("item_image", methods.safe_load_image(item["@image_filepath"]), image_scale=self.item_image_scale))
+        if not self.item_image_colourkey_active:
+            item_properties.find_widget("item_image").toggle_colourkey()
 
         item_properties.add_widget(TextWidget("item_image_load_fail", "Item image failed to load", colour=(255, 128, 128)))
         item_image_widget = item_properties.find_widget("item_image")
@@ -122,12 +132,21 @@ class ItemTool(Tool):
         item_properties.add_widget(TextWidget("item_image_back_checkbox_text", "Colourkey Active?"))
         item_properties.add_widget(SameLineWidget(10))
         item_properties.add_widget(CheckboxWidget("item_image_back_checkbox"))
+        item_properties.find_widget("item_image_back_checkbox").checked = self.item_image_colourkey_active
 
         item_properties.add_widget(TextWidget("image_scale", "Image Scale:"))
         item_properties.add_widget(SameLineWidget(10))
-        item_properties.add_widget(TextInputWidget("image_scale_input", "4.0", TextInputType.FLOAT, min_value=0.0, max_value=16.0))
+        item_properties.add_widget(TextInputWidget("image_scale_input", str(self.item_image_scale), TextInputType.FLOAT, min_value=0.0, max_value=16.0))
 
-        item_properties.find_widget("item_image_back_checkbox").checked = True
+        item_properties.add_widget(BeginCollapseWidget("collapse_test", "Collapse Test"))
+        item_properties.add_widget(ButtonWidget("test_collapse_button_1", "Collapse Button 1"))
+        item_properties.add_widget(ButtonWidget("test_collapse_button_2", "Collapse Button 2"))
+        item_properties.add_widget(ButtonWidget("test_collapse_button_3", "Collapse Button 3"))
+        item_properties.add_widget(ButtonWidget("test_collapse_button_4", "Collapse Button 4"))
+        item_properties.add_widget(ButtonWidget("test_collapse_button_5", "Collapse Button 5"))
+        item_properties.add_widget(EndCollapseWidget())
+
+        item_properties.add_widget(TextWidget("after_spooky_text", "After Spooky Text"))
 
         item_properties.update(None)
 
@@ -228,7 +247,8 @@ class ItemTool(Tool):
 
             elif widget.widget_id == "image_scale_input":
                 item_properties_container = self.find_container("item_properties")
-                item_properties_container.find_widget("item_image").update_image_scale(float(widget.text))
+                self.item_image_scale = float(widget.text)
+                item_properties_container.find_widget("item_image").update_image_scale(self.item_image_scale)
                 item_properties_container.update(None)
 
         elif widget.type == WidgetType.CHECKBOX:
@@ -236,6 +256,7 @@ class ItemTool(Tool):
                 item_properties = self.find_container("item_properties")
                 item_properties.find_widget("item_image").toggle_colourkey()
                 item_properties.render_widget_surface()
+                self.item_image_colourkey_active = not self.item_image_colourkey_active
 
         super().widget_altered(widget)
 
