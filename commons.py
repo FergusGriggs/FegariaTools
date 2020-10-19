@@ -1,6 +1,5 @@
 import pygame
 
-
 screen_w = 600
 screen_h = 150
 
@@ -19,6 +18,8 @@ st_icon = pygame.image.load("res/images/icons/100x100/structure_tool.png")
 tt_icon = pygame.image.load("res/images/icons/100x100/tile_tool.png")
 
 placeholder_image = pygame.image.load("res/images/misc/placeholder.png")
+
+widget_box_style = None
 
 window = None
 current_tool = None
@@ -52,7 +53,11 @@ x_scroll_bar_spacing = x_scroll_bar_width * 1.0
 y_scroll_bar_width = 10
 y_scroll_bar_spacing = y_scroll_bar_width * 1.0
 
+tab_size = 25
+
 mouse_diff = (0, 0)
+
+selected_widget = None
 
 default_cursor = None
 size_cursor_x = None

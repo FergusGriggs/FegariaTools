@@ -227,18 +227,35 @@ class UiContainer:
             self.split_line_rect = Rect(0, self.split_offset - 1, self.parent_rect.w, 3)
 
     def update_widget_positions(self):
+        # Update any collapsable children
+        widget_index = 0
+        while widget_index < len(self.widgets):
+            if self.widgets[widget_index].type == WidgetType.BEGIN_COLLAPSE:
+                widget_index = self.widgets[widget_index].update_collapsed_widgets(update_after=False)
+            widget_index += 1
+
         # Assign widgets to a line and calculate the extents of the line
         widget_lines = [WidgetLine()]
         current_line_index = 0
-
-        for i in range(len(self.widgets)):
+        tab_depth = 0
+        for widget_index in range(len(self.widgets)):
             # If it's the first widget of a new line
-            if i > 0 and self.widgets[i].base_type == WidgetBaseType.OBJECT and self.widgets[i - 1].base_type != WidgetBaseType.SAME_LINE:
-                widget_lines[current_line_index].create_extents()
-                widget_lines.append(WidgetLine())
-                current_line_index += 1
 
-            widget_lines[current_line_index].widgets.append(self.widgets[i])
+            if widget_index > 0:
+                previous_type = self.widgets[widget_index - 1].type
+                if self.widgets[widget_index].base_type == WidgetBaseType.OBJECT and not (previous_type == WidgetType.SAME_LINE or previous_type == WidgetType.TAB):
+                    widget_lines[current_line_index].num_tabs = tab_depth
+                    widget_lines[current_line_index].create_extents()
+                    widget_lines.append(WidgetLine())
+                    current_line_index += 1
+
+            widget_lines[current_line_index].widgets.append(self.widgets[widget_index])
+
+            if widget_index > 0:
+                if self.widgets[widget_index - 1].type == WidgetType.BEGIN_COLLAPSE:
+                    tab_depth += 1
+                elif self.widgets[widget_index - 1].type == WidgetType.END_COLLAPSE:
+                    tab_depth -= 1
 
         # Create extents for last line
         if len(widget_lines[current_line_index].widgets) > 0:
@@ -280,7 +297,7 @@ class UiContainer:
 
     def arrange_widgets_on_line(self, widget_line, y_offset_ref):
         # Place widgets based on align type
-        x_start = self.padding_left
+        x_start = self.padding_left + widget_line.num_tabs * commons.tab_size
 
         right_offset = self.padding_right
         if self.content_overflow_y:
@@ -293,7 +310,7 @@ class UiContainer:
             x_start = int(max(self.content_size_x - right_offset - widget_line.length, 0))
 
         for widget in widget_line.widgets:
-            if not widget.hidden or widget.type == WidgetType.SAME_LINE:
+            if not widget.hidden or widget.type == WidgetType.SAME_LINE or widget.type == WidgetType.TAB:
                 widget.rect.x = x_start
                 widget.rect.y = y_offset_ref.value + widget_line.height * 0.5 - widget.rect.h * 0.5
 

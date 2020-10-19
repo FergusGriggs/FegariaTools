@@ -2,6 +2,10 @@
 import pygame
 from pygame.locals import *
 
+# Project imports
+import commons
+from widget import WidgetBoxStyle
+
 from crafting_tool import CraftingTool
 from entity_tool import EntityTool
 from item_tool import ItemTool
@@ -9,8 +13,6 @@ from loot_tool import LootTool
 from structure_tool import StructureTool
 from tile_tool import TileTool
 
-# Project imports
-import commons
 
 pygame.init()
 pygame.display.set_caption("Tool Selector")
@@ -42,6 +44,7 @@ commons.current_tool = None
 
 commons.current_cursor = commons.default_cursor
 current_cursor = commons.default_cursor
+commons.widget_box_style = WidgetBoxStyle.GRADIENT_1
 
 pygame.key.set_repeat(250, 40)
 

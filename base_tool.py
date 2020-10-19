@@ -18,8 +18,8 @@ class Tool:
         self.light_accent_col = None
         self.dark_accent_col = None
 
-        self.default_w = 800
-        self.default_h = 600
+        self.default_w = 1100
+        self.default_h = 800
 
         self.main_window = UiContainer("window", Rect(0, 0, self.default_w, self.default_h))
 

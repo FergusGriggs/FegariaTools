@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <items>
-	<item id="0" name="Air" desc="What?" tags="block" image_filepath="res/images/items/air.png"></item>
-	<item id="1" name="Dirt" desc="It looks dirty" tags="block" image_filepath="res/images/items/dirt.png"></item>
-	<item id="2" name="Stone" desc="It's hard as a stone" tags="block, material" image_filepath="res/images/items/stone.png"></item>
-	<item id="3" name="Snow" desc="It's starting to melt..." tags="block" image_filepath="res/images/items/snow.png"></item>
-	<item id="4" name="Ice" desc="It's icy cold" tags="block" image_filepath="res/images/items/ice.png"></item>
-	<item id="5" name="Wood" desc="Looks craftable" tags="block, material" image_filepath="res/images/items/wood.png"></item>
-	<item id="6" name="Grass" desc="Lushious" tags="block" image_filepath="res/images/items/grass.png"></item>
-	<item id="7" name="Copper" desc="Looks maleable" tags="block, material" image_filepath="res/images/items/copper.png"></item>
-	<item id="8" name="Silver" desc="Looks maleable" tags="block, material" image_filepath="res/images/items/silver.png"></item>
-	<item id="9" name="Sand" desc="It's falling through your fingers" tags="block, material" image_filepath="res/images/items/sand.png"></item>
-	<item id="10" name="Sandstone" desc="It looks ancient" tags="" image_filepath="res/images/items/sandstone.png"></item>
-	<item id="11" name="Log" desc="Brown and loggy" tags="block" image_filepath="res/images/items/log.png"></item>
-	<item id="12" name="Leaves" desc="Crunchy" tags="block" image_filepath="res/images/items/leaves.png"></item>
-	<item id="13" name="Snow Leaves" desc="Crunchy" tags="block" image_filepath="res/images/items/snow_leaves.png"></item>
-	<item id="14" name="Platform" desc="A good alternative to stairs" tags="block, nowall" image_filepath="res/images/items/platform.png"></item>
-	<item id="15" name="Wooden Sword" desc="Go get 'em!" tags="melee, weapon" image_filepath="res/images/items/wooden_sword.png"></item>
-	<item id="16" name="Copper Sword" desc="Go get 'em!" tags="melee, weapon" image_filepath="res/images/items/copper_sword.png"></item>
-	<item id="17" name="GOD SLAYER" desc="Divine" tags="melee, weapon" image_filepath="res/images/items/god_slayer.png"></item>
-	<item id="18" name="Wooden Bow" desc="Shoots pointy things" tags="ranged, weapon, bow" image_filepath="res/images/items/wooden_bow.png"></item>
-	<item id="19" name="Wooden Arrow" desc="Pointy" tags="material, ammo" image_filepath="res/images/items/wooden_arrow.png"></item>
-	<item id="20" name="Musket" desc="You know how to fire that?" tags="ranged, weapon, gun" image_filepath="res/images/items/musket.png"></item>
-	<item id="21" name="Musket Ball" desc="Blunt" tags="material, ammo" image_filepath="res/images/items/musket_ball.png"></item>
-	<item id="22" name="Copper Coin" desc="Keep the change ya filthy animal" tags="ammo, coin" image_filepath="res/images/items/copper_coin.png"></item>
-	<item id="23" name="Silver Coin" desc="It's cold to the touch" tags="ammo, coin" image_filepath="res/images/items/silver_coin.png"></item>
-	<item id="24" name="Gold Coin" desc="Ooh, shiny!" tags="ammo, coin" image_filepath="res/images/items/gold_coin.png"></item>
-	<item id="25" name="Platinum Coin" desc="You're rich!" tags="ammo, coin" image_filepath="res/images/items/platinum_coin.png"></item>
-	<item id="26" name="Copper Pickaxe" desc="The power of destruction is yours" tags="pickaxe, tool" image_filepath="res/images/items/copper_pickaxe.png"></item>
-	<item id="27" name="Blue Gel" desc="Sticky" tags="material" image_filepath="res/images/items/blue_gel.png"></item>
-	<item id="28" name="Wooden Chest" desc="Fill it with loot!" tags="nowall chest, block, multitile, interactable" image_filepath="res/images/items/wooden_chest.png"></item>
-	<item id="29" name="Crafting Table" desc="In a time of destruction, create!" tags="nowall, crafting_table, block, multitile" image_filepath="res/images/items/crafting_table.png"></item>
-	<item id="30" name="Wooden Door" desc="Amazing technology" tags="nowall, door, block, multitile, interactable" image_filepath="res/images/items/wooden_door.png"></item>
-	<item id="31" name="Lamp" desc="Light it up!" tags="block, nowall" image_filepath="res/images/items/lamp.png"></item>
-	<item id="32" name="Spike" desc="It's spikey, ouch" tags="block, nowall" image_filepath="res/images/items/spike.png"></item>
-	<item id="33" name="Pot" desc="How did this not break?" tags="block, nowall, multitile" image_filepath="res/images/items/pot.png"></item>
+	<item id="0" id_str="fg_air" name="Air" desc="What?" tags="block" image_filepath="res/images/items/air.png"></item>
+	<item id="1" id_str="fg_dirt" name="Dirt" desc="It looks dirty" tags="block" image_filepath="res/images/items/dirt.png"></item>
+	<item id="2" id_str="fg_stone" name="Stone" desc="It's hard as a stone" tags="block,material" image_filepath="res/images/items/stone.png"></item>
+	<item id="3" id_str="fg_snow" name="Snow" desc="It's starting to melt..." tags="block" image_filepath="res/images/items/snow.png"></item>
+	<item id="4" id_str="fg_ice" name="Ice" desc="It's icy cold" tags="block" image_filepath="res/images/items/ice.png"></item>
+	<item id="5" id_str="fg_wood" name="Wood" desc="Looks craftable" tags="block,material" image_filepath="res/images/items/wood.png"></item>
+	<item id="6" id_str="fg_grass" name="Grass" desc="Lushious" tags="block" image_filepath="res/images/items/grass.png"></item>
+	<item id="7" id_str="fg_copper" name="Copper" desc="Looks maleable" tags="block,material" image_filepath="res/images/items/copper.png"></item>
+	<item id="8" id_str="fg_silver" name="Silver" desc="Looks maleable" tags="block,material" image_filepath="res/images/items/silver.png"></item>
+	<item id="9" id_str="fg_sand" name="Sand" desc="It's falling through your fingers" tags="block,material" image_filepath="res/images/items/sand.png"></item>
+	<item id="10" id_str="fg_sandstone" name="Sandstone" desc="It looks ancient" tags="block,material" image_filepath="res/images/items/sandstone.png"></item>
+	<item id="11" id_str="fg_log" name="Log" desc="Brown and loggy" tags="block" image_filepath="res/images/items/log.png"></item>
+	<item id="12" id_str="fg_leaves" name="Leaves" desc="Crunchy" tags="block" image_filepath="res/images/items/leaves.png"></item>
+	<item id="13" id_str="fg_leaves_snow" name="Snow Leaves" desc="Crunchy" tags="block" image_filepath="res/images/items/snow_leaves.png"></item>
+	<item id="14" id_str="fg_platform" name="Platform" desc="A good alternative to stairs" tags="block,nowall" image_filepath="res/images/items/platform.png"></item>
+	<item id="15" id_str="fg_sword_wood" name="Wooden Sword" desc="Go get 'em!" tags="melee,weapon" image_filepath="res/images/items/wooden_sword.png"></item>
+	<item id="16" id_str="fg_sword_copper" name="Copper Sword" desc="Go get 'em!" tags="melee,weapon" image_filepath="res/images/items/copper_sword.png"></item>
+	<item id="17" id_str="fg_sword_god_slayer" name="GOD SLAYER" desc="Divine" tags="melee,weapon" image_filepath="res/images/items/god_slayer.png"></item>
+	<item id="18" id_str="fg_bow_wood" name="Wooden Bow" desc="Shoots pointy things" tags="ranged,weapon,bow" image_filepath="res/images/items/wooden_bow.png"></item>
+	<item id="19" id_str="fg_arrow_wood" name="Wooden Arrow" desc="Pointy" tags="material,projectile" image_filepath="res/images/items/wooden_arrow.png"></item>
+	<item id="20" id_str="fg_musket" name="Musket" desc="You know how to fire that?" tags="ranged,weapon,gun" image_filepath="res/images/items/musket.png"></item>
+	<item id="21" id_str="fg_ammo_bullet" name="Musket Ball" desc="Blunt" tags="material,projectile" image_filepath="res/images/items/musket_ball.png"></item>
+	<item id="22" id_str="fg_coin_copper" name="Copper Coin" desc="Keep the change ya filthy animal" tags="ammo,coin" image_filepath="res/images/items/copper_coin.png"></item>
+	<item id="23" id_str="fg_coin_silver" name="Silver Coin" desc="It's cold to the touch" tags="ammo,coin" image_filepath="res/images/items/silver_coin.png"></item>
+	<item id="24" id_str="fg_coin_gold" name="Gold Coin" desc="Ooh, shiny!" tags="ammo,coin" image_filepath="res/images/items/gold_coin.png"></item>
+	<item id="25" id_str="fg_coin_platinum" name="Platinum Coin" desc="You're rich!" tags="ammo,coin" image_filepath="res/images/items/platinum_coin.png"></item>
+	<item id="26" id_str="fg_pickaxe_copper" name="Copper Pickaxe" desc="The power of destruction is yours" tags="pickaxe,tool" image_filepath="res/images/items/copper_pickaxe.png"></item>
+	<item id="27" id_str="fg_gel_blue" name="Blue Gel" desc="Sticky" tags="material" image_filepath="res/images/items/blue_gel.png"></item>
+	<item id="28" id_str="fg_chest_wood" name="Wooden Chest" desc="Fill it with loot!" tags="nowall chest,block,multitile,interactable" image_filepath="res/images/items/wooden_chest.png"></item>
+	<item id="29" id_str="fg_crafting_table" name="Crafting Table" desc="In a time of destruction, create!" tags="nowall,crafting_table,block,multitile" image_filepath="res/images/items/crafting_table.png"></item>
+	<item id="30" id_str="fg_door_wood" name="Wooden Door" desc="Amazing technology" tags="nowall,door,block,multitile,interactable" image_filepath="res/images/items/wooden_door.png"></item>
+	<item id="31" id_str="fg_lamp" name="Lamp" desc="Light it up!" tags="block,nowall" image_filepath="res/images/items/lamp.png"></item>
+	<item id="32" id_str="fg_spike" name="Spike" desc="It's spikey, ouch" tags="block,nowall" image_filepath="res/images/items/spike.png"></item>
+	<item id="33" id_str="fg_pot" name="Pot" desc="How did this not break?" tags="block,nowall,multitile" image_filepath="res/images/items/pot.png"></item>
 </items>

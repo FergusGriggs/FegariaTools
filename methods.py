@@ -77,8 +77,6 @@ def draw_rect_clipped(surface, colour, rect, width, clipping_rect):
 
 
 def draw_arrow(surface, centre, size, angle):
-    #pygame.draw.rect(surface, commons.text_col, Rect(centre[0] - size, centre[1] - size, size * 2, size * 2), 2)
-
     arrow_points = [
         (-0.75, 0.25),
         (-0.15, -0.6),
@@ -103,3 +101,21 @@ def draw_arrow(surface, centre, size, angle):
         final_arrow_points.append((centre[0] + int(math.cos(point_angle) * point_dist * size), centre[1] + int(math.sin(point_angle) * point_dist * size)))
 
     pygame.draw.polygon(surface, commons.text_col, final_arrow_points)
+
+
+def make_comma_seperated_string(string_list, order_list=True):
+    if order_list:
+        string_list.sort()
+    string = ""
+    for i in range(len(string_list)):
+        if i != 0:
+            string += ","
+        string += string_list[i]
+    return string
+
+
+def get_item_tags(item):
+    tags = item["@tags"].split(",")
+    if tags[0] == "":
+        tags = []
+    return tags
