@@ -119,11 +119,15 @@ class UiContainer:
             scrolled_mouse_pos = (relative_mouse_pos[0] + self.scroll_x_offset, relative_mouse_pos[1] + self.scroll_y_offset)
 
             mouse_over_rect = Rect(0, 0, self.parent_rect.w, self.parent_rect.h).collidepoint(relative_mouse_pos)
-            for widget in self.widgets:
-                if mouse_over_rect:
+            if mouse_over_rect:
+                for widget in self.widgets:
                     widget.frame_update(altered_widgets, scrolled_mouse_pos)
-                elif widget.type == WidgetType.BUTTON or widget.type == WidgetType.LINE_SELECTOR:
-                    widget.hovered = False
+            else:
+                for widget in self.widgets:
+                    if widget.type == WidgetType.BUTTON or widget.type == WidgetType.LINE_SELECTOR or widget.type == WidgetType.TEXT_INPUT:
+                        widget.hovered = False
+                        print("here")
+                        # Change this to only deselect when the mouse leaves the container (is mouse over bool)
 
     def update_scroll_bars(self, relative_mouse_pos):
         self.scroll_bar_hover_x = False
