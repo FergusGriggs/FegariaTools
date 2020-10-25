@@ -369,7 +369,7 @@ class LineSelectorWidget(Widget):
                                            container_rect.w, container_rect.h))
 
     def late_position_update(self, widget_line, ui_container):
-        self.rect = Rect(-5, widget_line.y_pos, ui_container.content_size_x + 10, widget_line.height)
+        self.rect = Rect(-5, widget_line.y_pos, ui_container.content_size[0] + 10, widget_line.height)
 
 
 class ButtonWidget(Widget):
@@ -633,6 +633,7 @@ class BeginCollapseWidget(TextWidget):
         self.type = WidgetType.BEGIN_COLLAPSE
         self.hovered = False
         self.collapsed = collapsed
+        self.use_padding = False
 
     def frame_update(self, altered_widgets, relative_mouse_pos):
         self.hovered = False
@@ -699,11 +700,17 @@ class BeginCollapseWidget(TextWidget):
                                                container_rect.w, container_rect.h))
 
     def late_position_update(self, widget_line, ui_container):
-        final_width = ui_container.content_size_x - self.rect.x - ui_container.padding_right
-        if ui_container.content_overflow_y:
+        if self.use_padding:
+            final_width = ui_container.content_size[0] - self.rect.x - ui_container.padding_right
+        else:
+            final_width = ui_container.content_size[0] - self.rect.x + ui_container.padding_left
+        if ui_container.content_overflow[1]:
             final_width -= commons.y_scroll_bar_spacing
         final_width = max(self.rect.w, final_width)
-        self.rect = Rect(self.rect.x, widget_line.y_pos, final_width, widget_line.height)
+        if self.use_padding:
+            self.rect = Rect(self.rect.x, widget_line.y_pos, final_width, widget_line.height)
+        else:
+            self.rect = Rect(self.rect.x - ui_container.padding_left, widget_line.y_pos, final_width, widget_line.height)
         self.render_surface()
 
     def render_surface(self):
