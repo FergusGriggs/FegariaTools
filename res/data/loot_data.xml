@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lootgroups>
+	<loot id="0" id_str="fg.loot.INVALID"></loot>
+	<loot id="1" id_str="fg.loot.pot"></loot>
+	<loot id="2" id_str="fg.loot.chest_wood"></loot>
+</lootgroups>

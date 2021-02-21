@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<sounds>
+	<sound id="0" id_str="fg.sound.INVALID" variation_paths=""></sound>
+	<sound id="1" id_str="fg.sound.tink" variation_paths="res/sounds/Tink_0.wav,res/sounds/Tink_1.wav,res/sounds/Tink_2.wav"></sound>
+	<sound id="2" id_str="fg.sound.dig" variation_paths="res/sounds/Dig_0.wav,res/sounds/Dig_1.wav,res/sounds/Dig_2.wav"></sound>
+	<sound id="3" id_str="fg.sound.jump" variation_paths="res/sounds/Jump_0.wav"></sound>
+	<sound id="4" id_str="fg.sound.player_hurt" variation_paths="res/sounds/Player_Hit_0.wav,res/sounds/Player_Hit_1.wav,res/sounds/Player_Hit_2.wav"></sound>
+    <sound id="5" id_str="fg.sound.grass" variation_paths="res/sounds/Grass.wav"></sound>
+	<sound id="6" id_str="fg.sound.player_death" variation_paths="res/sounds/Player_Killed.wav"></sound>
+	<sound id="7" id_str="fg.sound.item_6" variation_paths="res/sounds/Item_6.wav"></sound>
+	<sound id="8" id_str="fg.sound.slime_hurt" variation_paths="res/sounds/NPC_Hit_1.wav"></sound>
+	<sound id="9" id_str="fg.sound.slime_death" variation_paths="res/sounds/NPC_Killed_1.wav"></sound>
+	<sound id="10" id_str="fg.sound.item_1" variation_paths="res/sounds/Item_1.wav"></sound>
+	<sound id="11" id_str="fg.sound.item_5" variation_paths="res/sounds/Item_5.wav"></sound>
+	<sound id="12" id_str="fg.sound.item_40" variation_paths="res/sounds/Item_40.wav"></sound>
+	<sound id="13" id_str="fg.sound.item_10" variation_paths="res/sounds/Item_10.wav"></sound>
+	<sound id="14" id_str="fg.sound.grab" variation_paths="res/sounds/Grab.wav"></sound>
+	<sound id="15" id_str="fg.sound.run" variation_paths="res/sounds/Run_0.wav,res/sounds/Run_1.wav,res/sounds/Run_2.wav"></sound>
+	<sound id="16" id_str="fg.sound.coins" variation_paths="res/sounds/Coins.wav"></sound>
+	<sound id="17" id_str="fg.sound.menu_open" variation_paths="res/sounds/Menu_Open.wav"></sound>
+	<sound id="18" id_str="fg.sound.menu_close" variation_paths="res/sounds/Menu_Close.wav"></sound>
+	<sound id="19" id_str="fg.sound.mech_0" variation_paths="res/sounds/Mech_0.wav"></sound>
+	<sound id="20" id_str="fg.sound.chat" variation_paths="res/sounds/Chat.wav"></sound>
+	<sound id="21" id_str="fg.sound.door_opened" variation_paths="res/sounds/Door_Opened.wav"></sound>
+	<sound id="22" id_str="fg.sound.door_closed" variation_paths="res/sounds/Door_Closed.wav"></sound>
+</sounds>

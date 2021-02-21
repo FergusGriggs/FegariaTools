@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<structures>
+	<structure id="0" id_str="fg.structure.INVALID"></structure>
+	<structure id="1" id_str="fg.structure.mineshaft_top"></structure>
+	<structure id="2" id_str="fg.structure.mineshaft_main"></structure>
+    <structure id="3" id_str="fg.structure.mineshaft_room_left"></structure>
+    <structure id="4" id_str="fg.structure.mineshaft_room_right"></structure>
+</structures>
