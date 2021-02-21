@@ -12,6 +12,17 @@ class SplitType(Enum):
     VERTICAL = 1
 
 
+class SortType(Enum):
+    BY_ID = 0
+    BY_ID_REVERSE = 1
+    ALPHABETICALLY = 2
+    ALPHABETICALLY_REVERSE = 3
+
+
+def cycle_sort_type(sort_type):
+    return SortType((sort_type.value + 1) % 4)
+
+
 class ScrollBarData:
     def __init__(self):
         self.length = 0
@@ -22,12 +33,13 @@ class ScrollBarData:
 
 
 class UiContainer:
-    def __init__(self, container_id, parent_rect):
+    def __init__(self, container_id, rect, parent_container):
         self.container_id = container_id
-        self.parent_rect = parent_rect
+        self.rect = rect
+        self.parent_container = parent_container
 
-        if self.parent_rect is None:
-            self.parent_rect = Rect(0, 0, commons.screen_w, commons.screen_h)
+        if self.rect is None:
+            self.rect = Rect(0, 0, commons.screen_w, commons.screen_h)
 
         self.has_split = False
         self.split_type = SplitType.HORIZONTAL
@@ -65,6 +77,9 @@ class UiContainer:
         self.last_relative_mouse_pos = (0, 0)
         self.mouse_over_rect = False
 
+        self.needs_update = False
+        self.needs_redraw = False
+
     def add_widget(self, widget):
         if not self.has_split:
             self.widgets.append(widget)
@@ -81,12 +96,12 @@ class UiContainer:
             self.update_split_rects()
             self.update_split_line_rect()
 
-            self.split_children = (UiContainer(container_id_1, self.split_rects[0]),
-                                   UiContainer(container_id_2, self.split_rects[1]))
+            self.split_children = (UiContainer(container_id_1, self.split_rects[0], self),
+                                   UiContainer(container_id_2, self.split_rects[1], self))
 
-    def update(self, parent_rect):
-        if parent_rect is not None:
-            self.parent_rect = parent_rect
+    def update(self, rect):
+        if rect is not None:
+            self.rect = rect
 
         if self.has_split:
             self.update_split_rects()
@@ -116,25 +131,35 @@ class UiContainer:
             scrolled_mouse_pos = (relative_mouse_pos[0] + self.scroll_offset[0], relative_mouse_pos[1] + self.scroll_offset[1])
 
             was_mouse_over_rect = self.mouse_over_rect
-            self.mouse_over_rect = Rect(0, 0, self.parent_rect.w, self.parent_rect.h).collidepoint(relative_mouse_pos)
+            self.mouse_over_rect = Rect(0, 0, self.rect.w, self.rect.h).collidepoint(relative_mouse_pos)
 
             if self.mouse_over_rect:
                 for widget in self.widgets:
                     widget.frame_update(altered_widgets, scrolled_mouse_pos)
+
             else:
                 if was_mouse_over_rect:
                     for widget in self.widgets:
                         if widget.type == WidgetType.BUTTON or widget.type == WidgetType.LINE_SELECTOR or widget.type == WidgetType.TEXT_INPUT:
                             widget.hovered = False
 
+        if self.needs_update:
+            self.needs_update = False
+            self.needs_redraw = False
+            self.update(None)
+
+        elif self.needs_redraw:
+            self.needs_redraw = False
+            self.render_widget_surface()
+
     def update_scroll_bars(self, relative_mouse_pos):
         self.x_scroll_bar.hover = False
         self.y_scroll_bar.hover = False
 
         if self.content_overflow[1]:
-            pixel_offset = int((self.parent_rect.h - self.y_scroll_bar.length) * (
-                        self.scroll_offset[1] / (self.content_size[1] - self.parent_rect.h)))
-            self.y_scroll_bar.rect = Rect(self.parent_rect.w - commons.y_scroll_bar_width, pixel_offset,
+            pixel_offset = int((self.rect.h - self.y_scroll_bar.length) * (
+                        self.scroll_offset[1] / (self.content_size[1] - self.rect.h)))
+            self.y_scroll_bar.rect = Rect(self.rect.w - commons.y_scroll_bar_width, pixel_offset,
                                           commons.y_scroll_bar_width, self.y_scroll_bar.length)
             if commons.first_mouse_hover and self.y_scroll_bar.rect.collidepoint(*relative_mouse_pos):
                 commons.first_mouse_hover = False
@@ -146,9 +171,9 @@ class UiContainer:
                     commons.dragging_object = True
 
         if self.content_overflow[0]:
-            pixel_offset = int((self.parent_rect.w - self.x_scroll_bar.length) * (
-                        self.scroll_offset[0] / (self.content_size[0] - self.parent_rect.w)))
-            self.x_scroll_bar.rect = Rect(pixel_offset, self.parent_rect.h - commons.x_scroll_bar_width,
+            pixel_offset = int((self.rect.w - self.x_scroll_bar.length) * (
+                        self.scroll_offset[0] / (self.content_size[0] - self.rect.w)))
+            self.x_scroll_bar.rect = Rect(pixel_offset, self.rect.h - commons.x_scroll_bar_width,
                                           self.x_scroll_bar.length, commons.x_scroll_bar_width)
             if commons.first_mouse_hover and self.x_scroll_bar.rect.collidepoint(*relative_mouse_pos):
                 commons.first_mouse_hover = False
@@ -161,11 +186,11 @@ class UiContainer:
 
         if self.x_scroll_bar.dragging:
             scroll_to_offset = int(((relative_mouse_pos[0] - self.x_scroll_bar.grab_offset) / (
-                        self.parent_rect.w - self.x_scroll_bar.length)) * (self.content_size[0] - self.parent_rect.w))
+                        self.rect.w - self.x_scroll_bar.length)) * (self.content_size[0] - self.rect.w))
             self.scroll_container_to_value((scroll_to_offset, None))
         if self.y_scroll_bar.dragging:
             scroll_to_offset = int(((relative_mouse_pos[1] - self.y_scroll_bar.grab_offset) / (
-                        self.parent_rect.h - self.y_scroll_bar.length)) * (self.content_size[1] - self.parent_rect.h))
+                        self.rect.h - self.y_scroll_bar.length)) * (self.content_size[1] - self.rect.h))
             self.scroll_container_to_value((None, scroll_to_offset))
 
         if not pygame.mouse.get_pressed()[0]:
@@ -174,11 +199,11 @@ class UiContainer:
 
     def update_split_rects(self):
         if self.split_type == SplitType.HORIZONTAL:
-            self.split_rects = (Rect(0, 0, self.split_offset, self.parent_rect.h),
-                                Rect(self.split_offset, 0, self.parent_rect.w - self.split_offset, self.parent_rect.h))
+            self.split_rects = (Rect(0, 0, self.split_offset, self.rect.h),
+                                Rect(self.split_offset, 0, self.rect.w - self.split_offset, self.rect.h))
         else:
-            self.split_rects = (Rect(0, 0, self.parent_rect.w, self.split_offset),
-                                Rect(0, self.split_offset, self.parent_rect.w, self.parent_rect.h - self.split_offset))
+            self.split_rects = (Rect(0, 0, self.rect.w, self.split_offset),
+                                Rect(0, self.split_offset, self.rect.w, self.rect.h - self.split_offset))
 
     def update_split_dragging(self, relative_mouse_pos):
         if self.split_draggable:
@@ -198,9 +223,9 @@ class UiContainer:
                 commons.first_mouse_hover = False
                 self.split_line_hovering = True
                 if self.split_type == SplitType.HORIZONTAL:
-                    self.split_offset = relative_mouse_pos[0] - self.parent_rect.x
+                    self.split_offset = relative_mouse_pos[0] - self.rect.x
                 else:
-                    self.split_offset = relative_mouse_pos[1] - self.parent_rect.y
+                    self.split_offset = relative_mouse_pos[1] - self.rect.y
                 self.clamp_split_offset()
 
                 self.update_split_rects()
@@ -224,9 +249,9 @@ class UiContainer:
 
     def update_split_line_rect(self):
         if self.split_type == SplitType.HORIZONTAL:
-            self.split_line_rect = Rect(self.split_offset - 1, 0, 3, self.parent_rect.h)
+            self.split_line_rect = Rect(self.split_offset - 1, 0, 3, self.rect.h)
         else:
-            self.split_line_rect = Rect(0, self.split_offset - 1, self.parent_rect.w, 3)
+            self.split_line_rect = Rect(0, self.split_offset - 1, self.rect.w, 3)
 
     def update_widget_positions(self):
         # Update any collapsable children
@@ -244,8 +269,8 @@ class UiContainer:
             # If it's the first widget of a new line
 
             if widget_index > 0:
-                previous_type = self.widgets[widget_index - 1].type
-                if self.widgets[widget_index].base_type == WidgetBaseType.OBJECT and not (previous_type == WidgetType.SAME_LINE or previous_type == WidgetType.TAB):
+                previous_base_type = self.widgets[widget_index - 1].base_type
+                if self.widgets[widget_index].base_type == WidgetBaseType.OBJECT and not (previous_base_type == WidgetBaseType.SAME_LINE):
                     widget_lines[current_line_index].num_tabs = tab_depth
                     widget_lines[current_line_index].create_extents()
                     widget_lines.append(WidgetLine())
@@ -278,8 +303,8 @@ class UiContainer:
         self.update_overflow_data()
 
         # Extend surface to the size of the parent rect if it's too small
-        self.content_size[0] = max(self.content_size[0], self.parent_rect.w)
-        self.content_size[1] = max(self.content_size[1], self.parent_rect.h)
+        self.content_size[0] = max(self.content_size[0], self.rect.w)
+        self.content_size[1] = max(self.content_size[1], self.rect.h)
 
         # Place all the widgets
         y_offset_ref = ValueRef(self.padding_top)
@@ -288,8 +313,8 @@ class UiContainer:
             self.arrange_widgets_on_line(line, y_offset_ref)
 
         # Update the surface rect
-        self.widget_surface_rect.w = max(self.parent_rect.w, self.content_size[0])
-        self.widget_surface_rect.h = max(self.parent_rect.h, self.content_size[1])
+        self.widget_surface_rect.w = max(self.rect.w, self.content_size[0])
+        self.widget_surface_rect.h = max(self.rect.h, self.content_size[1])
 
         # Apply any late widget updates that require the final position of lines, size of content etc
         for line in widget_lines:
@@ -310,12 +335,17 @@ class UiContainer:
         elif self.widget_align_type == WidgetAlignType.RIGHT:
             x_start = int(max(self.content_size[0] - right_offset - widget_line.length, 0))
 
+        initial_left_x = x_start
+
         for widget in widget_line.widgets:
-            if not widget.hidden or widget.type == WidgetType.SAME_LINE or widget.type == WidgetType.TAB:
+            if not widget.hidden or widget.base_type == WidgetBaseType.SAME_LINE:
                 widget.rect.x = x_start
                 widget.rect.y = y_offset_ref.value + widget_line.height * 0.5 - widget.rect.h * 0.5
 
-                x_start += widget.rect.w
+                if widget.type == WidgetType.SAME_LINE_FILL_TO_LINE:
+                    x_start = max(x_start, widget.fill_to_line_x + initial_left_x)
+                else:
+                    x_start += widget.rect.w
 
         # Give the line it's final y position
         widget_line.y_pos = y_offset_ref.value
@@ -326,17 +356,17 @@ class UiContainer:
     def update_overflow_data(self):
         # Work out the final size of the content including any necessary scroll bars
         # and determine if content is overflowing in either axis
-        if self.content_size[1] > self.parent_rect.h:
+        if self.content_size[1] > self.rect.h:
             self.content_overflow[1] = True
             self.content_size[0] += commons.y_scroll_bar_spacing
         else:
             self.content_overflow[1] = False
 
-        if self.content_size[0] > self.parent_rect.w:
+        if self.content_size[0] > self.rect.w:
             self.content_overflow[0] = True
             self.content_size[1] += commons.x_scroll_bar_spacing
 
-            if not self.content_overflow[1] and self.content_size[1] > self.parent_rect.h:
+            if not self.content_overflow[1] and self.content_size[1] > self.rect.h:
                 self.content_overflow[1] = True
                 self.content_size[0] += commons.y_scroll_bar_spacing
         else:
@@ -349,12 +379,12 @@ class UiContainer:
 
         # Work out the sizes of the scrollbars that are required
         if self.content_overflow[0] and self.content_size[0] > 0:
-            self.x_scroll_bar.length = int(self.parent_rect.w * (self.parent_rect.w / self.content_size[0]))
+            self.x_scroll_bar.length = int(self.rect.w * (self.rect.w / self.content_size[0]))
         else:
             self.scroll_offset[0] = 0
 
         if self.content_overflow[1] and self.content_size[1] > 0:
-            self.y_scroll_bar.length = int(self.parent_rect.h * (self.parent_rect.h / self.content_size[1]))
+            self.y_scroll_bar.length = int(self.rect.h * (self.rect.h / self.content_size[1]))
         else:
             self.scroll_offset[1] = 0
 
@@ -374,9 +404,10 @@ class UiContainer:
             self.draw_split_line(relative_position)
         else:
             commons.window.blit(self.widget_surface, relative_position, Rect(self.scroll_offset[0], self.scroll_offset[1],
-                                                                             self.parent_rect.w, self.parent_rect.h))
+                                                                             self.rect.w, self.rect.h))
+
             for widget in self.widgets:
-                widget.draw(relative_position, self.scroll_offset, self.parent_rect)
+                widget.draw(relative_position, self.scroll_offset, self.rect)
 
             if self.content_overflow[0] and self.x_scroll_bar.rect is not None:
                 colour = commons.border_col
@@ -405,18 +436,21 @@ class UiContainer:
             for split_index in range(2):
                 self.split_children[split_index].process_event(event)
         else:
-            if Rect(0, 0, self.parent_rect.w, self.parent_rect.h).collidepoint(self.last_relative_mouse_pos) and event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 4:
-                    self.add_scroll_vel((0, -1000))
-                elif event.button == 5:
-                    self.add_scroll_vel((0, 1000))
-            should_update_widget_surface = False
             for widget in self.widgets:
                 if widget.process_event(event):
                     should_update_widget_surface = True
-
-            if should_update_widget_surface:
-                self.render_widget_surface()
+            if commons.first_scroll_action and event.type == pygame.MOUSEBUTTONDOWN:
+                if Rect(0, 0, self.rect.w, self.rect.h).collidepoint(self.last_relative_mouse_pos):
+                    if event.button == 4:
+                        self.add_scroll_vel((0, -1000))
+                        commons.first_scroll_action = False
+                        # if self.scroll_offset[1] > 0:
+                        #    commons.first_scroll_action = False
+                    elif event.button == 5:
+                        self.add_scroll_vel((0, 1000))
+                        commons.first_scroll_action = False
+                        # if self.scroll_offset[1] < self.widget_surface_rect.h - self.rect.h:
+                        #     commons.first_scroll_action = False
 
     def update_scroll_velocity(self):
         self.scroll_velocity[0] *= 1.0 - commons.delta_time * 10.0
@@ -435,8 +469,8 @@ class UiContainer:
                 self.scroll_offset[0] = 0
                 self.scroll_velocity[0] = 0.0
 
-            elif self.scroll_offset[0] > self.widget_surface_rect.w - self.parent_rect.w:
-                self.scroll_offset[0] = self.widget_surface_rect.w - self.parent_rect.w
+            elif self.scroll_offset[0] > self.widget_surface_rect.w - self.rect.w:
+                self.scroll_offset[0] = self.widget_surface_rect.w - self.rect.w
                 self.scroll_velocity[0] = 0.0
 
         if self.content_overflow[1]:
@@ -445,15 +479,15 @@ class UiContainer:
                 self.scroll_offset[1] = 0
                 self.scroll_velocity[1] = 0.0
 
-            elif self.scroll_offset[1] > self.widget_surface_rect.h - self.parent_rect.h:
-                self.scroll_offset[1] = self.widget_surface_rect.h - self.parent_rect.h
+            elif self.scroll_offset[1] > self.widget_surface_rect.h - self.rect.h:
+                self.scroll_offset[1] = self.widget_surface_rect.h - self.rect.h
                 self.scroll_velocity[1] = 0.0
 
     def scroll_container_to_value(self, offset_value):
         if self.content_overflow[0] and offset_value[0] is not None:
-            self.scroll_offset[0] = min(self.widget_surface_rect.w - self.parent_rect.w, max(0, offset_value[0]))
+            self.scroll_offset[0] = min(self.widget_surface_rect.w - self.rect.w, max(0, offset_value[0]))
         if self.content_overflow[1] and offset_value[1] is not None:
-            self.scroll_offset[1] = min(self.widget_surface_rect.h - self.parent_rect.h, max(0, offset_value[1]))
+            self.scroll_offset[1] = min(self.widget_surface_rect.h - self.rect.h, max(0, offset_value[1]))
 
     def draw_split_line(self, relative_position):
         if self.draw_line or self.split_line_hovering:
@@ -514,8 +548,7 @@ class UiContainer:
                 self.split_children[split_index].deselect_all()
         else:
             for widget in self.widgets:
-                if widget.type == WidgetType.LINE_SELECTOR:
-                    widget.selected = False
+                widget.deselect()
 
     def make_scrollable(self, x=True, y=True):
         self.scrollable[0] = x
@@ -533,3 +566,10 @@ class UiContainer:
 
     def set_widget_align_type(self, widget_align_type):
         self.widget_align_type = widget_align_type
+
+    def get_global_position_from_local(self, local_position):
+        new_position = (local_position[0] + self.rect.x - self.scroll_offset[0], local_position[1] + self.rect.y - self.scroll_offset[1])
+        if self.parent_container is not None:
+            return self.parent_container.get_global_position_from_local(new_position)
+        else:
+            return new_position

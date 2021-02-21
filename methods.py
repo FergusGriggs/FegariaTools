@@ -44,8 +44,8 @@ numeric_chars = [
 ]
 
 
-def limit_to_numeric_chars(char, allow_period):
-    if char in numeric_chars or (allow_period and char == '.'):
+def limit_to_numeric_chars(char, allow_period, allow_comma):
+    if char in numeric_chars or (allow_period and char == '.') or (allow_comma and char == ','):
         return char
     return None
 
@@ -60,7 +60,7 @@ def modify_col(col, mod):
 
 def safe_load_image(path):
     try:
-        return pygame.image.load(path)
+        return pygame.image.load(path).convert()
     except pygame.error:
         return commons.placeholder_image
 
@@ -114,8 +114,14 @@ def make_comma_seperated_string(string_list, order_list=True):
     return string
 
 
-def get_item_tags(item):
-    tags = item["@tags"].split(",")
+def get_tags(dict_with_tags):
+    tags = dict_with_tags["@tags"].split(",")
     if tags[0] == "":
         tags = []
     return tags
+
+def get_item_prefixes(item):
+    prefixes = item["@prefixes"].split(",")
+    if prefixes[0] == "":
+        prefixes = []
+    return prefixes
