@@ -13,14 +13,18 @@ The item tool allows for information about items to be changed including the nam
 ![Item Tool Screenshot](res/images/screenshots/item_tool_screenshot.png)
 ### Exports to
 - **item_data.xml** data file
-- **item_images.png** texture atlas file
 ## Loot Tool
+![Loot Tool Screenshot](res/images/screenshots/loot_tool_screenshot.png)
 ## Structure Tool
+![Structure Tool Screenshot](res/images/screenshots/structure_tool_screenshot.png)
 ## Tile Tool
+![Tile Tool Screenshot](res/images/screenshots/tile_tool_screenshot.png)
 ## Ai Tool
 Not implemented yet.
 ## Sound Tool
+![Sound Tool Screenshot](res/images/screenshots/sound_tool_screenshot.png)
 ## World Tool
 ## Projectile Tool
 Not implemented yet.
 ## Wall Tool
+![Wall Tool Screenshot](res/images/screenshots/wall_tool_screenshot.png)
