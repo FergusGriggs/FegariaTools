@@ -1,7 +1,7 @@
 # FegariaTools
 
 ## HOW TO USE
-Once you have pygame installed, you should just be able to run the **fegaria_tools.py** file
+Once you have pygame installed, you should just be able to run the **fegaria_tools.py** file. You can then make any changes you wish, just make sure that you copy all the images/data/sounds over to the game's res folder when you're done editing.
 
 ## About
 This is a collection of tools that can be used to create data for Fegaria. It uses a custom UI system which allows for many kinds of user input and (hopefully) is good looking and easy to use. Most of the tools will export a data file and potentially a texture atlas image if images are part of the tool's data. These files can be dropped into the respective data and images folders in the Fegaria resources to give the game access to them.
