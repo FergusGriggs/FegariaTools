@@ -12,6 +12,8 @@ ai_data = None
 crafting_data = None
 entity_data = None
 world_gen_data = None
+projectile_data = None
+wall_data = None
 
 item_id_strs = []
 tile_id_strs = []
@@ -22,6 +24,37 @@ ai_id_strs = []
 crafting_id_strs = []
 entity_id_strs = []
 world_gen_id_strs = []
+projectile_id_strs = []
+wall_id_strs = []
+
+
+def get_tile_id_str_from_id_hash(hash_int):
+    for tile in tile_data["tiles"]["tile"]:
+        if hash(tile["@id_str"]) == hash_int:
+            return tile["@id_str"]
+
+def get_loot_id_str_from_id_hash(hash_int):
+    for loot in loot_data["lootgroups"]["loot"]:
+        if hash(loot["@id_str"]) == hash_int:
+            return loot["@id_str"]
+
+def get_wall_id_str_from_id_hash(hash_int):
+    for wall in wall_data["walls"]["wall"]:
+        if hash(wall["@id_str"]) == hash_int:
+            return wall["@id_str"]
+
+def find_tile_index_by_id_str(tile_id_str):
+    for tile_index in range(len(tile_data["tiles"]["tile"])):
+        if tile_data["tiles"]["tile"][tile_index]["@id_str"] == tile_id_str:
+            return tile_index
+    return -1
+
+
+def find_wall_index_by_id_str(wall_id_str):
+    for wall_index in range(len(wall_data["walls"]["wall"])):
+        if wall_data["walls"]["wall"][wall_index]["@id_str"] == wall_id_str:
+            return wall_index
+    return -1
 
 
 # Tile data
@@ -301,6 +334,96 @@ def save_world_gen_data():
 def unload_world_gen_data():
     global world_gen_data
     world_gen_data = None
+
+
+# Projectile Data
+def update_projectile_id_strs():
+    global projectile_id_strs
+    projectile_id_strs.clear()
+    for entry in projectile_data["projectiles"]["projectile"]:
+        projectile_id_strs.append(entry["@id_str"])
+
+
+def load_projectile_data():
+    global projectile_data
+    read_file = open("res/data/projectile_data.xml", "r")
+    projectile_data = xmltodict.parse(read_file.read())
+    read_file.close()
+
+    update_projectile_id_strs()
+
+
+def save_projectile_data():
+    write_file = open("res/data/projectile_data.xml", "w")
+    unparsed_data = xmltodict.unparse(projectile_data, pretty=True)
+    write_file.write(unparsed_data)
+    write_file.close()
+
+    update_projectile_id_strs()
+
+
+def unload_projectile_data():
+    global projectile_data
+    projectile_data = None
+
+
+# Wall Data
+def update_wall_id_strs():
+    global wall_id_strs
+    wall_id_strs.clear()
+    for entry in wall_data["walls"]["wall"]:
+        wall_id_strs.append(entry["@id_str"])
+
+
+def load_wall_data():
+    global wall_data
+    read_file = open("res/data/wall_data.xml", "r")
+    wall_data = xmltodict.parse(read_file.read())
+    read_file.close()
+
+    update_wall_id_strs()
+
+
+def save_wall_data():
+    write_file = open("res/data/wall_data.xml", "w")
+    unparsed_data = xmltodict.unparse(wall_data, pretty=True)
+    write_file.write(unparsed_data)
+    write_file.close()
+
+    update_wall_id_strs()
+
+
+def unload_wall_data():
+    global wall_data
+    wall_data = None
+
+
+def load_all_data():
+    load_item_data()
+    load_tile_data()
+    load_sound_data()
+    load_loot_data()
+    load_crafting_data()
+    load_ai_data()
+    load_entity_data()
+    load_world_gen_data()
+    load_structure_data()
+    load_projectile_data()
+    load_wall_data()
+
+
+def save_all_data():
+    save_item_data()
+    save_tile_data()
+    save_sound_data()
+    save_loot_data()
+    save_crafting_data()
+    save_ai_data()
+    save_entity_data()
+    save_world_gen_data()
+    save_structure_data()
+    save_projectile_data()
+    save_wall_data()
 
 
 def find_element_by_attribute(elements, attribute_name, attribute_value):

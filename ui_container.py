@@ -59,6 +59,13 @@ class UiContainer:
         self.padding_bot = 5
         self.padding_right = 5
 
+        self.padding_shadow_top = False
+        self.padding_shadow_left = False
+        self.padding_shadow_bot = False
+        self.padding_shadow_right = False
+        self.any_padding_shadow = False
+        self.padding_shadow_multiplier = 0.99
+
         self.widgets = []
         self.widget_surface = None
         self.widget_surface_rect = Rect(0, 0, 0, 0)
@@ -207,7 +214,14 @@ class UiContainer:
 
     def update_split_dragging(self, relative_mouse_pos):
         if self.split_draggable:
-            if self.split_line_rect.collidepoint(*relative_mouse_pos) and commons.first_mouse_hover:
+            collide_rect = Rect(self.split_line_rect)
+            if self.split_type == SplitType.HORIZONTAL:
+                collide_rect.x -= 1
+                collide_rect.w += 4
+            else:
+                collide_rect.y -= 1
+                collide_rect.h += 4
+            if collide_rect.collidepoint(*relative_mouse_pos) and commons.first_mouse_hover:
                 commons.first_mouse_hover = False
                 self.split_line_hovering = True
 
@@ -258,7 +272,7 @@ class UiContainer:
         widget_index = 0
         while widget_index < len(self.widgets):
             if self.widgets[widget_index].type == WidgetType.BEGIN_COLLAPSE:
-                widget_index = self.widgets[widget_index].update_collapsed_widgets(update_after=False)
+                widget_index = self.widgets[widget_index].update_collapsed_widgets(update_after=False, start_index=widget_index)
             widget_index += 1
 
         # Assign widgets to a line and calculate the extents of the line
@@ -268,9 +282,10 @@ class UiContainer:
         for widget_index in range(len(self.widgets)):
             # If it's the first widget of a new line
 
-            if widget_index > 0:
+            if widget_index > 0 and self.widgets[widget_index].active:
                 previous_base_type = self.widgets[widget_index - 1].base_type
-                if self.widgets[widget_index].base_type == WidgetBaseType.OBJECT and not (previous_base_type == WidgetBaseType.SAME_LINE):
+                previous_type = self.widgets[widget_index - 1].type
+                if self.widgets[widget_index].base_type == WidgetBaseType.OBJECT and not (previous_base_type == WidgetBaseType.SAME_LINE or previous_type == WidgetType.TAB):
                     widget_lines[current_line_index].num_tabs = tab_depth
                     widget_lines[current_line_index].create_extents()
                     widget_lines.append(WidgetLine())
@@ -278,6 +293,7 @@ class UiContainer:
 
             widget_lines[current_line_index].widgets.append(self.widgets[widget_index])
 
+            # Adjust the current tab depth
             if widget_index > 0:
                 if self.widgets[widget_index - 1].type == WidgetType.BEGIN_COLLAPSE:
                     tab_depth += 1
@@ -302,24 +318,17 @@ class UiContainer:
         # Check if the content is overflowing the boundaries
         self.update_overflow_data()
 
-        # Extend surface to the size of the parent rect if it's too small
-        self.content_size[0] = max(self.content_size[0], self.rect.w)
-        self.content_size[1] = max(self.content_size[1], self.rect.h)
-
         # Place all the widgets
         y_offset_ref = ValueRef(self.padding_top)
 
         for line in widget_lines:
             self.arrange_widgets_on_line(line, y_offset_ref)
 
-        # Update the surface rect
-        self.widget_surface_rect.w = max(self.rect.w, self.content_size[0])
-        self.widget_surface_rect.h = max(self.rect.h, self.content_size[1])
-
         # Apply any late widget updates that require the final position of lines, size of content etc
         for line in widget_lines:
             for widget in line.widgets:
-                widget.late_position_update(line, self)
+                if widget.active:
+                    widget.late_position_update(line)
 
     def arrange_widgets_on_line(self, widget_line, y_offset_ref):
         # Place widgets based on align type
@@ -330,15 +339,15 @@ class UiContainer:
             right_offset += commons.y_scroll_bar_spacing
 
         if self.widget_align_type == WidgetAlignType.CENTRE:
-            padded_width = self.content_size[0] - self.padding_left - self.padding_right
+            padded_width = self.widget_surface_rect.w - self.padding_left - self.padding_right
             x_start = int(max(self.padding_left + padded_width * 0.5 - widget_line.length * 0.5, 0))
         elif self.widget_align_type == WidgetAlignType.RIGHT:
-            x_start = int(max(self.content_size[0] - right_offset - widget_line.length, 0))
+            x_start = int(max(self.widget_surface_rect.w - right_offset - widget_line.length, 0))
 
         initial_left_x = x_start
 
         for widget in widget_line.widgets:
-            if not widget.hidden or widget.base_type == WidgetBaseType.SAME_LINE:
+            if not widget.hidden or widget.base_type == WidgetBaseType.SAME_LINE or widget.type == WidgetType.TAB:
                 widget.rect.x = x_start
                 widget.rect.y = y_offset_ref.value + widget_line.height * 0.5 - widget.rect.h * 0.5
 
@@ -388,9 +397,46 @@ class UiContainer:
         else:
             self.scroll_offset[1] = 0
 
+        # Extend surface to the size of the parent rect if it's too small
+        self.widget_surface_rect.w = max(self.rect.w, self.content_size[0])
+        self.widget_surface_rect.h = max(self.rect.h, self.content_size[1])
+
     def render_widget_surface(self):
         self.widget_surface = pygame.Surface((self.widget_surface_rect.w, self.widget_surface_rect.h))
         self.widget_surface.fill(self.background_colour)
+
+        if self.any_padding_shadow:
+            padding_shadow_colour = methods.modify_col(self.background_colour, self.padding_shadow_multiplier)
+
+            visual_padding_left = int(self.padding_left * 0.75)
+            visual_padding_right = int(self.padding_right * 0.75)
+            visual_padding_top = int(self.padding_top * 0.75)
+            visual_padding_bot = int(self.padding_bot * 0.75)
+
+            right_scroll_bar_offset = 0
+            if self.content_overflow[1]:
+                right_scroll_bar_offset = commons.y_scroll_bar_width
+            bot_scroll_bar_offset = 0
+            if self.content_overflow[0]:
+                bot_scroll_bar_offset = commons.x_scroll_bar_width
+
+            for iteration in range(7):
+                if iteration != 0:
+                    padding_shadow_colour = methods.modify_col(padding_shadow_colour, self.padding_shadow_multiplier)
+
+                    visual_padding_left = int(visual_padding_left * 0.75)
+                    visual_padding_right = int(visual_padding_right * 0.75)
+                    visual_padding_top = int(visual_padding_top * 0.75)
+                    visual_padding_bot = int(visual_padding_bot * 0.75)
+
+                if self.padding_shadow_left:
+                    pygame.draw.rect(self.widget_surface, padding_shadow_colour, Rect(0, 0, visual_padding_left, self.widget_surface_rect.h))
+                if self.padding_shadow_right:
+                    pygame.draw.rect(self.widget_surface, padding_shadow_colour, Rect(self.widget_surface_rect.w - visual_padding_right - right_scroll_bar_offset, 0, visual_padding_right + right_scroll_bar_offset, self.widget_surface_rect.h))
+                if self.padding_shadow_top:
+                    pygame.draw.rect(self.widget_surface, padding_shadow_colour, Rect(0, 0, self.widget_surface_rect.w, visual_padding_top))
+                if self.padding_shadow_bot:
+                    pygame.draw.rect(self.widget_surface, padding_shadow_colour, Rect(0, self.widget_surface_rect.h - visual_padding_bot - bot_scroll_bar_offset, self.widget_surface_rect.w, visual_padding_bot + bot_scroll_bar_offset))
 
         for widget in self.widgets:
             widget.render_to_surface(self.widget_surface)
@@ -437,8 +483,7 @@ class UiContainer:
                 self.split_children[split_index].process_event(event)
         else:
             for widget in self.widgets:
-                if widget.process_event(event):
-                    should_update_widget_surface = True
+                widget.process_event(event)
             if commons.first_scroll_action and event.type == pygame.MOUSEBUTTONDOWN:
                 if Rect(0, 0, self.rect.w, self.rect.h).collidepoint(self.last_relative_mouse_pos):
                     if event.button == 4:
@@ -564,6 +609,21 @@ class UiContainer:
         if right is not None:
             self.padding_right = right
 
+    def set_padding_shadow(self, top=None, left=None, bot=None, right=None):
+        if top is not None:
+            self.padding_shadow_top = top
+        if left is not None:
+            self.padding_shadow_left = left
+        if bot is not None:
+            self.padding_shadow_bot = bot
+        if right is not None:
+            self.padding_shadow_right = right
+
+        self.any_padding_shadow = self.padding_shadow_top or self.padding_shadow_left or self.padding_shadow_bot or self.padding_shadow_right
+
+    def set_padding_shadow_multiplier(self, multiplier):
+        self.padding_shadow_multiplier = multiplier
+
     def set_widget_align_type(self, widget_align_type):
         self.widget_align_type = widget_align_type
 
@@ -573,3 +633,16 @@ class UiContainer:
             return self.parent_container.get_global_position_from_local(new_position)
         else:
             return new_position
+
+    def offset_widgets_after_widget_with_id(self, widget_id, offset_y, update_overflow_data):
+        widget_found = False
+        for widget in self.widgets:
+            if widget_found:
+                widget.rect.y += offset_y
+            elif widget.widget_id == widget_id:
+                widget_found = True
+
+        self.content_size[1] += offset_y
+
+        if update_overflow_data and widget_found:
+            self.update_overflow_data()

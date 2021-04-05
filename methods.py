@@ -1,6 +1,6 @@
 import pygame
 import math
-
+import os
 from pygame.locals import *
 import commons
 
@@ -63,6 +63,8 @@ def safe_load_image(path):
         return pygame.image.load(path).convert()
     except pygame.error:
         return commons.placeholder_image
+    except FileNotFoundError:
+        return commons.placeholder_image
 
 
 def draw_rect_clipped(surface, colour, rect, width, clipping_rect):
@@ -103,16 +105,25 @@ def draw_arrow(surface, centre, size, angle):
     pygame.draw.polygon(surface, commons.text_col, final_arrow_points)
 
 
-def make_comma_seperated_string(string_list, order_list=True):
+def make_comma_seperated_string(string_list, order_list=True, pre_string="", post_string=""):
     if order_list:
         string_list.sort()
     string = ""
     for i in range(len(string_list)):
         if i != 0:
             string += ","
-        string += string_list[i]
+        string += pre_string + string_list[i] + post_string
     return string
 
+def trim_strings(string_list, front_trim=0, back_trim=0):
+    new_list = []
+    for string in string_list:
+        if front_trim != 0:
+            string = string[front_trim:]
+        if back_trim != 0:
+            string = string[:-back_trim]
+        new_list.append(string)
+    return new_list
 
 def get_tags(dict_with_tags):
     tags = dict_with_tags["@tags"].split(",")
@@ -125,3 +136,20 @@ def get_item_prefixes(item):
     if prefixes[0] == "":
         prefixes = []
     return prefixes
+
+def find_next_char_in_string(string, char, start_index):
+    for char_index in range(start_index, len(string)):
+        if string[char_index] == char:
+            return char_index
+    return -1
+
+def positive_hash(string):
+    return hash(string) % (32 ** 2)
+
+def hash_string_and_convert_to_chars(string):
+    hash_int = int(positive_hash(string))
+    chars = "".join(chr((hash_int >> 8 * (4 - byte - 1)) & 0xFF) for byte in range(4))
+    return chars
+
+def convert_chars_to_int(chars):
+    return sum(ord(chars[byte]) << 8 * (4 - byte - 1) for byte in range(4))

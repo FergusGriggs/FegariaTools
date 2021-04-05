@@ -22,14 +22,13 @@ class ItemTool(Tool):
 
         self.name = "Item Tool"
         self.entity_type = "Item"
-        self.xml_data_root = game_data.item_data
         self.xml_group_name = "items"
         self.xml_type_name = "item"
 
+        self.set_xml_data_root()
+
         self.icon = commons.it_icon_small
         self.accent_col = commons.item_tool_col
-
-        self.item_list_sort_type = SortType.BY_ID
 
         self.item_image_scale = 3.0
         self.item_image_colourkey_active = True
@@ -45,7 +44,8 @@ class ItemTool(Tool):
 
         self.prefix_properties_collapsed = True
         self.image_properties_collapsed = False
-        self.block_properties_collapsed = True
+        self.tile_properties_collapsed = True
+        self.wall_properties_collapsed = True
         self.weapon_properties_collapsed = True
         self.ranged_properties_collapsed = True
         self.magical_properties_collapsed = True
@@ -54,8 +54,18 @@ class ItemTool(Tool):
         self.axe_properties_collapsed = True
         self.hammer_properties_collapsed = True
         self.grapple_properties_collapsed = True
+        self.sound_properties_collapsed = False
 
         super().init()
+
+    def set_xml_data_root(self):
+        self.xml_data_root = game_data.item_data
+
+    def export_tool_data(self):
+        game_data.save_item_data()
+
+    def reload_tool_data(self):
+        game_data.load_item_data()
 
     def load_property_page_for_entity(self, entity):
         item_properties = self.find_container("entity_properties")
@@ -69,19 +79,19 @@ class ItemTool(Tool):
 
         # Name
         item_properties.add_widget(TextWidget("item_name", "Name:"))
-        item_properties.add_widget(SameLineFillToLineWidget(250))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
         item_properties.add_widget(TextInputWidget("item_name_input", entity["@name"], TextInputType.STRING))
 
         # String Id
         item_properties.add_widget(TextWidget("item_id_str_text", "Id Str:"))
-        item_properties.add_widget(SameLineFillToLineWidget(170))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset - commons.font_20.size("fg.item.")[0]))
         item_properties.add_widget(TextWidget("item_id_str_text", "fg.item.", commons.selected_border_col))
         item_properties.add_widget(SameLineWidget(0))
-        item_properties.add_widget(TextInputWidget("item_id_str", entity["@id_str"][8:], TextInputType.STRING))
+        item_properties.add_widget(TextInputWidget("item_id_str", entity["@id_str"].split(".")[-1], TextInputType.STRING))
 
         # Description
         item_properties.add_widget(TextWidget("item_desc", "Description:"))
-        item_properties.add_widget(SameLineFillToLineWidget(250))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
         item_properties.add_widget(TextInputWidget("item_desc_input", entity["@desc"], TextInputType.STRING))
 
         item_properties.add_widget(EndCollapseWidget())
@@ -91,38 +101,47 @@ class ItemTool(Tool):
 
         # Tier
         item_properties.add_widget(TextWidget("item_tier_text", "Tier:"))
-        item_properties.add_widget(SameLineFillToLineWidget(250))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
         item_properties.add_widget(TextInputWidget("item_tier", entity["@tier"], TextInputType.INT, min_value=0, max_value=10))
 
         # Max Stack
         item_properties.add_widget(TextWidget("item_max_stack_text", "Max Stack:"))
-        item_properties.add_widget(SameLineFillToLineWidget(250))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
         item_properties.add_widget(TextInputWidget("item_max_stack", entity["@max_stack"], TextInputType.INT, min_value=1, max_value=999))
 
         # Buy Price
         item_properties.add_widget(TextWidget("item_buy_price_text", "Buy Price:"))
-        item_properties.add_widget(SameLineFillToLineWidget(250))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
         item_properties.add_widget(TextInputWidget("item_buy_price", entity["@buy_price"], TextInputType.INT, min_value=0))
 
         # Sell Price
         item_properties.add_widget(TextWidget("item_sell_price_text", "Sell Price:"))
-        item_properties.add_widget(SameLineFillToLineWidget(250))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
         item_properties.add_widget(TextInputWidget("item_sell_price", entity["@sell_price"], TextInputType.INT, min_value=0))
+
+        # Hold offset
+        item_properties.add_widget(TextWidget("item_hold_offset_text", "Hold Offset:"))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
+        item_properties.add_widget(TextInputWidget("item_hold_offset", entity["@hold_offset"], TextInputType.FLOAT, min_value=-1.0, max_value=1.0))
 
         item_properties.add_widget(EndCollapseWidget())
 
         # Item tags
         item_properties.add_widget(BeginCollapseWidget("item_tags", "Tags [" + entity["@tags"] + "]", collapsed=self.tags_collapsed))
 
-        item_properties.add_widget(TextWidget("item_tags_intro", "Select any tags that apply to the item (Additional menus may appear at the bottom)"))
+        item_properties.add_widget(WrappedTextWidget("item_tags_intro", "Select any tags that apply to the item (Additional menus may appear at the bottom)"))
 
         tags = methods.get_tags(entity)
 
         item_properties.add_widget(BeginCollapseWidget("item_tags_basic", "Basic", collapsed=self.basic_tags_collapsed))
 
-        item_properties.add_widget(CheckboxWidget("itemtag_block", checked=("block" in tags)))
+        item_properties.add_widget(CheckboxWidget("itemtag_tile", checked=("tile" in tags)))
         item_properties.add_widget(SameLineWidget(10))
-        item_properties.add_widget(TextWidget("block_tag_text", "block"))
+        item_properties.add_widget(TextWidget("tile_tag_text", "tile"))
+
+        item_properties.add_widget(CheckboxWidget("itemtag_wall", checked=("wall" in tags)))
+        item_properties.add_widget(SameLineWidget(10))
+        item_properties.add_widget(TextWidget("wall_tag_text", "wall"))
 
         item_properties.add_widget(CheckboxWidget("itemtag_material", checked=("material" in tags)))
         item_properties.add_widget(SameLineWidget(10))
@@ -227,13 +246,13 @@ class ItemTool(Tool):
         item_properties.add_widget(BeginCollapseWidget("item_image_properties", "Image Properties", collapsed=self.image_properties_collapsed))
 
         item_properties.add_widget(TextWidget("image_path", "Image Path:"))
-        item_properties.add_widget(SameLineFillToLineWidget(250))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
         item_properties.add_widget(TextInputWidget("image_file_path_input", entity["@image_path"], TextInputType.STRING))
         item_properties.add_widget(SameLineWidget(10))
         item_properties.add_widget(ButtonWidget("open_item_image_folder", "Open Folder"))
 
         item_properties.add_widget(TextWidget("image_text", "Item Image:"))
-        item_properties.add_widget(SameLineFillToLineWidget(250))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
         item_properties.add_widget(ImageWidget("item_image", methods.safe_load_image(entity["@image_path"]), image_scale=self.item_image_scale))
         if not self.item_image_colourkey_active:
             item_properties.find_widget("item_image").toggle_colourkey()
@@ -246,23 +265,33 @@ class ItemTool(Tool):
             item_properties.find_widget("item_image_load_fail").show()
 
         item_properties.add_widget(TextWidget("item_image_back_checkbox_text", "Colourkey Active?"))
-        item_properties.add_widget(SameLineFillToLineWidget(250))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
         item_properties.add_widget(CheckboxWidget("item_image_back_checkbox"))
         item_properties.find_widget("item_image_back_checkbox").checked = self.item_image_colourkey_active
 
         item_properties.add_widget(TextWidget("image_scale", "Image Scale:"))
-        item_properties.add_widget(SameLineFillToLineWidget(250))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
         item_properties.add_widget(TextInputWidget("image_scale_input", str(self.item_image_scale), TextInputType.FLOAT, min_value=0.0, max_value=16.0))
 
         item_properties.add_widget(EndCollapseWidget())
 
-        # Block Properties
-        if "block" in tags:
-            item_properties.add_widget(BeginCollapseWidget("item_block_properties", "Block Properties", collapsed=self.block_properties_collapsed))
+        # Tile Properties
+        if "tile" in tags:
+            item_properties.add_widget(BeginCollapseWidget("item_tile_properties", "Tile Properties", collapsed=self.tile_properties_collapsed))
 
             item_properties.add_widget(TextWidget("item_tile_id_str_text", "Tile Id Str:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(DropDownWidget("item_tile_id_str", game_data.tile_id_strs, DropDownType.SELECT, initial_string=entity["@tile_id_str"]))
+
+            item_properties.add_widget(EndCollapseWidget())
+
+        # Wall Properties
+        if "wall" in tags:
+            item_properties.add_widget(BeginCollapseWidget("item_wall_properties", "Wall Properties", collapsed=self.wall_properties_collapsed))
+
+            item_properties.add_widget(TextWidget("item_wall_id_str_text", "Wall Id Str:"))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
+            item_properties.add_widget(DropDownWidget("item_wall_id_str", game_data.wall_id_strs, DropDownType.SELECT, initial_string=entity["@wall_id_str"]))
 
             item_properties.add_widget(EndCollapseWidget())
 
@@ -271,31 +300,27 @@ class ItemTool(Tool):
             item_properties.add_widget(BeginCollapseWidget("item_weapon_properties", "Weapon Properties", collapsed=self.weapon_properties_collapsed))
 
             item_properties.add_widget(TextWidget("item_attack_speed_text", "Attack Speed:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_attack_speed", entity["@attack_speed"], TextInputType.INT))
 
             item_properties.add_widget(TextWidget("item_attack_damage_text", "Attack Damage:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_attack_damage", entity["@attack_damage"], TextInputType.INT))
 
             item_properties.add_widget(TextWidget("item_knockback_text", "Knockback:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_knockback", entity["@knockback"], TextInputType.INT))
 
             item_properties.add_widget(TextWidget("item_crit_chance_text", "Crit Chance:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_crit_chance", entity["@crit_chance"], TextInputType.FLOAT))
 
-            item_properties.add_widget(TextWidget("item_hold_offset_text", "Hold Offset:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
-            item_properties.add_widget(TextInputWidget("item_hold_offset", entity["@hold_offset"], TextInputType.INT))
-
             item_properties.add_widget(TextWidget("item_world_override_image_path_text", "World Override Image path:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_world_override_image_path", entity["@world_override_image_path"], TextInputType.STRING))
 
             item_properties.add_widget(TextWidget("item_world_override_image_text", "World Override Image:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(ImageWidget("item_world_override_image", methods.safe_load_image(entity["@world_override_image_path"]), image_scale=self.item_image_scale))
             if not self.item_image_colourkey_active:
                 item_properties.find_widget("item_world_override_image").toggle_colourkey()
@@ -306,26 +331,24 @@ class ItemTool(Tool):
         if "ranged" in tags:
             item_properties.add_widget(BeginCollapseWidget("item_ranged_properties", "Ranged Properties", collapsed=self.ranged_properties_collapsed))
 
-            item_properties.add_widget(TextWidget("item_ranged_projectile_id_str_text", "Proj Id Str:"))
-            item_properties.add_widget(SameLineFillToLineWidget(170))
-            item_properties.add_widget(TextWidget("item_ranged_projectile_id_str_pre", "fg.proj.", commons.selected_border_col))
-            item_properties.add_widget(SameLineWidget(0))
-            item_properties.add_widget(TextInputWidget("item_ranged_projectile_id_str", entity["@ranged_projectile_id_str"], TextInputType.STRING))
+            item_properties.add_widget(TextWidget("item_ranged_projectile_id_str_text", "Projectile Id Str:"))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
+            item_properties.add_widget(DropDownWidget("item_ranged_projectile_id_str", game_data.projectile_id_strs, DropDownType.SELECT, initial_string=entity["@ranged_projectile_id_str"]))
 
             item_properties.add_widget(TextWidget("item_ranged_ammo_type_text", "Ammo Type:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_ranged_ammo_type", entity["@ranged_ammo_type"], TextInputType.STRING))
 
             item_properties.add_widget(TextWidget("item_ranged_projectile_speed_text", "Launch Speed:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_ranged_projectile_speed", entity["@ranged_projectile_speed"], TextInputType.FLOAT))
 
             item_properties.add_widget(TextWidget("item_ranged_accuracy_text", "Accuracy:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_ranged_accuracy", entity["@ranged_accuracy"], TextInputType.STRING))
 
             item_properties.add_widget(TextWidget("item_num_projectiles_text", "Num Projectiles:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_num_projectiles", entity["@ranged_num_projectiles"], TextInputType.INT))
 
             item_properties.add_widget(EndCollapseWidget())
@@ -335,7 +358,7 @@ class ItemTool(Tool):
             item_properties.add_widget(BeginCollapseWidget("item_magical_properties", "Magical Properties", collapsed=self.magical_properties_collapsed))
 
             item_properties.add_widget(TextWidget("item_mana_cost_text", "Mana Cost:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_mana_cost", entity["@mana_cost"], TextInputType.INT))
 
             item_properties.add_widget(EndCollapseWidget())
@@ -345,24 +368,24 @@ class ItemTool(Tool):
             item_properties.add_widget(BeginCollapseWidget("item_ammo_properties", "Ammo Properties", collapsed=self.ammo_properties_collapsed))
 
             item_properties.add_widget(TextWidget("item_ammo_type_text", "Ammo Type:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_ammo_type", entity["@ammo_type"], TextInputType.STRING))
 
             item_properties.add_widget(TextWidget("item_ammo_damage_text", "Ammo Damage:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_ammo_damage", entity["@ammo_damage"], TextInputType.FLOAT))
 
             item_properties.add_widget(TextWidget("item_ammo_drag_text", "Ammo Drag:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_ammo_drag", entity["@ammo_drag"], TextInputType.FLOAT))
 
             item_properties.add_widget(TextWidget("item_ammo_gravity_mod_text", "Ammo Gravity Mod:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_ammo_gravity_mod", entity["@ammo_gravity_mod"], TextInputType.FLOAT))
 
-            item_properties.add_widget(TextWidget("item_ammo_knockback_text", "Ammo Knockback:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
-            item_properties.add_widget(TextInputWidget("item_ammo_knockback", entity["@ammo_knockback"], TextInputType.FLOAT))
+            item_properties.add_widget(TextWidget("item_ammo_knockback_mod_text", "Ammo Knockback Mod:"))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
+            item_properties.add_widget(TextInputWidget("item_ammo_knockback_mod", entity["@ammo_knockback_mod"], TextInputType.FLOAT))
 
             item_properties.add_widget(EndCollapseWidget())
 
@@ -371,7 +394,7 @@ class ItemTool(Tool):
             item_properties.add_widget(BeginCollapseWidget("item_pickaxe_properties", "Pickaxe Properties", collapsed=self.pickaxe_properties_collapsed))
 
             item_properties.add_widget(TextWidget("item_pickaxe_power_text", "Pickaxe Power:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_pickaxe_power", entity["@pickaxe_power"], TextInputType.FLOAT))
 
             item_properties.add_widget(EndCollapseWidget())
@@ -381,7 +404,7 @@ class ItemTool(Tool):
             item_properties.add_widget(BeginCollapseWidget("item_axe_properties", "Axe Properties", collapsed=self.axe_properties_collapsed))
 
             item_properties.add_widget(TextWidget("item_axe_power_text", "Axe Power:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_axe_power", entity["@axe_power"], TextInputType.FLOAT))
 
             item_properties.add_widget(EndCollapseWidget())
@@ -391,7 +414,7 @@ class ItemTool(Tool):
             item_properties.add_widget(BeginCollapseWidget("item_hammer_properties", "Hammer Properties", collapsed=self.hammer_properties_collapsed))
 
             item_properties.add_widget(TextWidget("item_hammer_power_text", "Hammer Power:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_hammer_power",  entity["@hammer_power"], TextInputType.FLOAT))
 
             item_properties.add_widget(EndCollapseWidget())
@@ -401,57 +424,68 @@ class ItemTool(Tool):
             item_properties.add_widget(BeginCollapseWidget("item_grapple_properties", "Grapple Properties", collapsed=self.grapple_properties_collapsed))
 
             item_properties.add_widget(TextWidget("item_grapple_speed_text", "Grapple Speed:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_grapple_speed",  entity["@grapple_speed"], TextInputType.FLOAT))
 
             item_properties.add_widget(TextWidget("item_grapple_chain_length_text", "Chain Length:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_grapple_chain_length",  entity["@grapple_chain_length"], TextInputType.FLOAT))
 
             item_properties.add_widget(TextWidget("item_grapple_max_chains_text", "Max Chains:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_grapple_max_chains", entity["@grapple_max_chains"], TextInputType.INT))
 
             item_properties.add_widget(TextWidget("item_grapple_chain_image_path_text", "Chain Image Path:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_grapple_chain_image_path",  entity["@grapple_chain_image_path"], TextInputType.STRING))
 
             item_properties.add_widget(TextWidget("item_grapple_chain_image_text", "Chain Image:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(ImageWidget("item_grapple_chain_image", methods.safe_load_image(entity["@grapple_chain_image_path"]), image_scale=2.0))
             if not self.item_image_colourkey_active:
                 item_properties.find_widget("item_grapple_chain_image").toggle_colourkey()
 
             item_properties.add_widget(TextWidget("item_grapple_claw_image_path_text", "Claw Image Path:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget(TextInputWidget("item_grapple_claw_image_path",  entity["@grapple_claw_image_path"], TextInputType.STRING))
 
             item_properties.add_widget(TextWidget("item_grapple_claw_image_text", "Claw Image:"))
-            item_properties.add_widget(SameLineFillToLineWidget(250))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
             item_properties.add_widget( ImageWidget("item_grapple_claw_image", methods.safe_load_image(entity["@grapple_claw_image_path"]), image_scale=2.0))
             if not self.item_image_colourkey_active:
                 item_properties.find_widget("item_grapple_claw_image").toggle_colourkey()
 
             item_properties.add_widget(EndCollapseWidget())
 
+        # Sound properties
+        item_properties.add_widget(BeginCollapseWidget("sound_properties", "Sound Properties", collapsed=self.sound_properties_collapsed))
+
+        # Place Sound
+        item_properties.add_widget(TextWidget("item_pickup_sound_text", "Pickup Sound:"))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
+        item_properties.add_widget(DropDownWidget("item_pickup_sound", game_data.sound_id_strs, DropDownType.SELECT, initial_string=entity["@pickup_sound"]))
+
+        # Place Sound
+        item_properties.add_widget(TextWidget("item_drop_sound_text", "Drop Sound:"))
+        item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
+        item_properties.add_widget(DropDownWidget("item_drop_sound", game_data.sound_id_strs, DropDownType.SELECT, initial_string=entity["@drop_sound"]))
+
+        if "weapon" in tags:
+            # Use Sound
+            item_properties.add_widget(TextWidget("item_use_sound_text", "Use Sound:"))
+            item_properties.add_widget(SameLineFillToLineWidget(commons.property_value_pixel_offset))
+            item_properties.add_widget(DropDownWidget("item_use_sound", game_data.sound_id_strs, DropDownType.SELECT, initial_string=entity["@use_sound"]))
+
+        item_properties.add_widget(EndCollapseWidget())
+
         item_properties.update(None)
 
     def widget_altered(self, widget):
         if widget.type == WidgetType.BUTTON:
-            if widget.widget_id == "export_data":
-                game_data.save_item_data()
-
-            elif widget.widget_id == "load_data":
-                game_data.load_item_data()
-                self.update_entity_list()
-
-                self.reselect_current_entity()
-                self.load_property_page_for_entity(self.current_entity)
-
-            elif widget.widget_id == "clear_item_tags":
+            if widget.widget_id == "clear_item_tags":
                 tags = methods.get_tags(self.current_entity)
-                tags.clear()
-                self.current_entity["@tags"] = methods.make_comma_seperated_string(tags)
+                for tag in tags:
+                    self.modify_item_tags(tag, False)
                 self.load_property_page_for_entity(self.current_entity)
 
             elif widget.widget_id == "open_item_image_folder":
@@ -484,17 +518,17 @@ class ItemTool(Tool):
 
             elif widget.widget_id == "image_file_path_input":
                 self.current_entity["@image_path"] = widget.text
-
-                item_image_widget = self.find_container("item_properties").find_widget("item_image")
-                image_scale = float(self.find_container("item_properties").find_widget("image_scale_input").text)
+                item_properties = self.find_container("entity_properties")
+                item_image_widget = item_properties.find_widget("item_image")
+                image_scale = float(item_properties.find_widget("image_scale_input").text)
                 item_image_widget.set_image(methods.safe_load_image(widget.text), image_scale=image_scale, update_container=False)
                 if item_image_widget.loaded:
-                    self.find_container("item_properties").find_widget("item_image_load_fail").hide()
+                    item_properties.find_widget("item_image_load_fail").hide()
                 else:
-                    self.find_container("item_properties").find_widget("item_image_load_fail").show()
-                self.update_container("item_properties")
+                    item_properties.find_widget("item_image_load_fail").show()
+                item_properties.update(None)
 
-                self.find_container("item_properties").find_widget("item_image_back_checkbox").checked = True
+                item_properties.find_widget("item_image_back_checkbox").checked = True
 
             elif widget.widget_id == "image_scale_input":
                 item_properties_container = self.find_container("item_properties")
@@ -519,6 +553,11 @@ class ItemTool(Tool):
 
             elif widget.widget_id == "item_world_override_image_path":
                 self.current_entity["@world_override_image_path"] = widget.text
+
+                item_properties = self.find_container("entity_properties")
+                item_image_widget = item_properties.find_widget("item_world_override_image")
+                item_image_widget.set_image(methods.safe_load_image(widget.text), image_scale=self.item_image_scale, update_container=False)
+                item_properties.update(None)
 
             elif widget.widget_id == "item_ranged_projectile_id_str":
                 self.current_entity["@ranged_projectile_id_str"] = widget.text
@@ -547,8 +586,8 @@ class ItemTool(Tool):
             elif widget.widget_id == "item_ammo_gravity_mod":
                 self.current_entity["@ammo_gravity_mod"] = widget.text
 
-            elif widget.widget_id == "item_ammo_knockback":
-                self.current_entity["@ammo_knockback"] = widget.text
+            elif widget.widget_id == "item_ammo_knockback_mod":
+                self.current_entity["@ammo_knockback_mod"] = widget.text
 
             elif widget.widget_id == "item_pickaxe_power":
                 self.current_entity["@pickaxe_power"] = widget.text
@@ -578,6 +617,18 @@ class ItemTool(Tool):
             if widget.widget_id == "item_tile_id_str":
                 self.current_entity["@tile_id_str"] = widget.selected_string
 
+            elif widget.widget_id == "item_wall_id_str":
+                self.current_entity["@wall_id_str"] = widget.selected_string
+
+            elif widget.widget_id == "item_pickup_sound":
+                self.current_entity["@pickup_sound"] = widget.selected_string
+
+            elif widget.widget_id == "item_drop_sound":
+                self.current_entity["@drop_sound"] = widget.selected_string
+
+            elif widget.widget_id == "item_use_sound":
+                self.current_entity["@use_sound"] = widget.selected_string
+
         elif widget.type == WidgetType.CHECKBOX:
             split_id = widget.widget_id.split("_")
             if len(split_id) > 0:
@@ -589,7 +640,7 @@ class ItemTool(Tool):
                     self.load_property_page_for_entity(self.current_entity)
 
             if widget.widget_id == "item_image_back_checkbox":
-                item_properties = self.find_container("item_properties")
+                item_properties = self.find_container("entity_properties")
                 item_properties.find_widget("item_image").toggle_colourkey()
                 item_properties.render_widget_surface()
                 self.item_image_colourkey_active = not self.item_image_colourkey_active
@@ -597,32 +648,60 @@ class ItemTool(Tool):
         elif widget.type == WidgetType.BEGIN_COLLAPSE:
             if widget.widget_id == "item_basic_properties":
                 self.basic_properties_collapsed = widget.collapsed
+
             elif widget.widget_id == "item_misc_properties":
                 self.misc_properties_collapsed = widget.collapsed
+
             elif widget.widget_id == "item_tags":
                 self.tags_collapsed = widget.collapsed
+
             elif widget.widget_id == "item_tags_basic":
                 self.basic_tags_collapsed = widget.collapsed
+
             elif widget.widget_id == "item_tags_weapon":
                 self.weapon_tags_collapsed = widget.collapsed
+
             elif widget.widget_id == "item_tags_tool":
                 self.tool_tags_collapsed = widget.collapsed
+
+            elif widget.widget_id == "item_pickaxe_properties":
+                self.pickaxe_properties_collapsed = widget.collapsed
+
+            elif widget.widget_id == "item_hammer_properties":
+                self.hammer_properties_collapsed = widget.collapsed
+
+            elif widget.widget_id == "item_axe_properties":
+                self.axe_properties_collapsed = widget.collapsed
+
             elif widget.widget_id == "item_tags_misc":
                 self.misc_tags_collapsed = widget.collapsed
+
             elif widget.widget_id == "item_image_properties":
                 self.image_properties_collapsed = widget.collapsed
-            elif widget.widget_id == "item_block_properties":
-                self.block_properties_collapsed = widget.collapsed
+
+            elif widget.widget_id == "item_tile_properties":
+                self.tile_properties_collapsed = widget.collapsed
+
+            elif widget.widget_id == "item_wall_properties":
+                self.wall_properties_collapsed = widget.collapsed
+
             elif widget.widget_id == "item_weapon_properties":
                 self.weapon_properties_collapsed = widget.collapsed
+
             elif widget.widget_id == "item_ranged_properties":
                 self.ranged_properties_collapsed = widget.collapsed
+
             elif widget.widget_id == "item_magical_properties":
                 self.magical_properties_collapsed = widget.collapsed
+
             elif widget.widget_id == "item_ammo_properties":
                 self.ammo_properties_collapsed = widget.collapsed
+
             elif widget.widget_id == "prefix_properties":
                 self.prefix_properties_collapsed = widget.collapsed
+
+            elif widget.widget_id == "sound_properties":
+                self.sound_properties_collapsed = widget.collapsed
 
         super().widget_altered(widget)
 
@@ -649,27 +728,122 @@ class ItemTool(Tool):
             tags.remove(tag_name)
             self.current_entity["@tags"] = methods.make_comma_seperated_string(tags)
 
-            prefixes = methods.get_item_prefixes(self.current_entity)
-            if tag_name in prefixes:
-                self.modify_item_prefixes(tag_name, False)
+            if "weapon" in tags:
+                prefixes = methods.get_item_prefixes(self.current_entity)
+                if tag_name in prefixes:
+                    self.modify_item_prefixes(tag_name, False)
 
-        if tag_name == "block":
+        if tag_name == "tile":
             if adding:
-                self.current_entity["@tile_id_str"] = ""
+                self.current_entity["@tile_id_str"] = "fg.tile.INVALID"
             else:
                 del self.current_entity["@tile_id_str"]
+
+        elif tag_name == "wall":
+            if adding:
+                self.current_entity["@wall_id_str"] = "fg.wall.INVALID"
+            else:
+                del self.current_entity["@wall_id_str"]
+
+        elif tag_name == "weapon":
+            if adding:
+                self.current_entity["@prefixes"] = ""
+                self.current_entity["@attack_speed"] = "0"
+                self.current_entity["@attack_damage"] = "0"
+                self.current_entity["@knockback"] = "0"
+                self.current_entity["@crit_chance"] = "0.03"
+                self.current_entity["@world_override_image_path"] = ""
+                self.current_entity["@use_sound"] = "fg.sound.swing"
+            else:
+                del self.current_entity["@prefixes"]
+                del self.current_entity["@attack_speed"]
+                del self.current_entity["@attack_damage"]
+                del self.current_entity["@knockback"]
+                del self.current_entity["@crit_chance"]
+                del self.current_entity["@world_override_image_path"]
+                del self.current_entity["@use_sound"]
+
+        elif tag_name == "ranged":
+            if adding:
+                self.current_entity["@ranged_projectile_id_str"] = ""
+                self.current_entity["@ranged_ammo_type"] = ""
+                self.current_entity["@ranged_projectile_speed"] = "10"
+                self.current_entity["@ranged_accuracy"] = "1"
+                self.current_entity["@ranged_num_projectiles"] = "1"
+            else:
+                del self.current_entity["@ranged_projectile_id_str"]
+                del self.current_entity["@ranged_ammo_type"]
+                del self.current_entity["@ranged_projectile_speed"]
+                del self.current_entity["@ranged_accuracy"]
+                del self.current_entity["@ranged_num_projectiles"]
+
+        elif tag_name == "magical":
+            if adding:
+                self.current_entity["@mana_cost"] = "0"
+            else:
+                del self.current_entity["@mana_cost"]
+
+        elif tag_name == "ammo":
+            if adding:
+                self.current_entity["@ammo_type"] = ""
+                self.current_entity["@ammo_damage"] = "0"
+                self.current_entity["@ammo_drag"] = "0.0"
+                self.current_entity["@ammo_gravity_mod"] = "1.0"
+                self.current_entity["@ammo_knockback_mod"] = "0.0"
+            else:
+                del self.current_entity["@ammo_type"]
+                del self.current_entity["@ammo_damage"]
+                del self.current_entity["@ammo_drag"]
+                del self.current_entity["@ammo_gravity_mod"]
+                del self.current_entity["@ammo_knockback"]
+
+        elif tag_name == "pickaxe":
+            if adding:
+                self.current_entity["@pickaxe_power"] = "0"
+            else:
+                del self.current_entity["@pickaxe_power"]
+
+        elif tag_name == "axe":
+            if adding:
+                self.current_entity["@axe_power"] = "0"
+            else:
+                del self.current_entity["@axe_power"]
+
+        elif tag_name == "hammer":
+            if adding:
+                self.current_entity["@hammer_power"] = "0"
+            else:
+                del self.current_entity["@hammer_power"]
+
+        elif tag_name == "grapple":
+            if adding:
+                self.current_entity["@grapple_speed"] = "0"
+                self.current_entity["@grapple_chain_length"] = "0"
+                self.current_entity["@grapple_max_chains"] = "1"
+                self.current_entity["@grapple_chain_image_path"] = ""
+                self.current_entity["@grapple_claw_image_path"] = ""
+            else:
+                del self.current_entity["@grapple_speed"]
+                del self.current_entity["@grapple_chain_length"]
+                del self.current_entity["@grapple_max_chains"]
+                del self.current_entity["@grapple_chain_image_path"]
+                del self.current_entity["@grapple_claw_image_path"]
 
     def get_default_entity_dict(self):
         entity_dict = super().get_default_entity_dict()
 
-        entity_dict["@name"] = ""
+        entity_dict["@name"] = "UNNAMED"
         entity_dict["@desc"] = ""
         entity_dict["@tier"] = "0"
         entity_dict["@max_stack"] = "999"
         entity_dict["@buy_price"] = "0"
         entity_dict["@sell_price"] = "0"
+        entity_dict["@hold_offset"] = "0"
         entity_dict["@tags"] = ""
 
         entity_dict["@image_path"] = "res/images/items/"
+
+        entity_dict["@pickup_sound"] = "fg.sound.grab"
+        entity_dict["@drop_sound"] = "fg.sound.grab"
 
         return entity_dict

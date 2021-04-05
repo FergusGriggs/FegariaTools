@@ -8,6 +8,7 @@ import math
 # Project imports
 import commons
 import methods
+import game_data
 
 from enum import Enum
 
@@ -21,16 +22,18 @@ class WidgetType:
     BASE = 0
     IMAGE = 1
     TEXT = 2
-    SAME_LINE = 3
-    SAME_LINE_FILL_TO_LINE = 4
-    CHECKBOX = 5
-    LINE_SELECTOR = 6
-    BUTTON = 7
-    TEXT_INPUT = 8
-    BEGIN_COLLAPSE = 9
-    END_COLLAPSE = 10
-    TAB = 11
-    DROP_DOWN = 12
+    WRAPPED_TEXT = 3
+    SAME_LINE = 4
+    SAME_LINE_FILL_TO_LINE = 5
+    CHECKBOX = 6
+    LINE_SELECTOR = 7
+    BUTTON = 8
+    TEXT_INPUT = 9
+    BEGIN_COLLAPSE = 10
+    END_COLLAPSE = 11
+    TAB = 12
+    DROP_DOWN = 13
+    STRUCTURE_CREATOR = 14
 
 
 class WidgetAlignType:
@@ -55,6 +58,55 @@ class DropDownType:
 class ValueRef:
     def __init__(self, value):
         self.value = value
+
+
+def render_accents(surface, colour):
+    surface.fill(colour)
+    rect = surface.get_rect()
+
+    if commons.widget_box_style == WidgetBoxStyle.GRADIENT_1:
+        pygame.draw.circle(surface, methods.modify_col(colour, 1.05),
+                           (int(rect.w * 0.7), -int(rect.w * 0.1)), int(rect.w * 0.55))
+        pygame.draw.circle(surface, methods.modify_col(colour, 1.1),
+                           (int(rect.w * 0.7), -int(rect.w * 0.1)), int(rect.w * 0.45))
+        pygame.draw.circle(surface, methods.modify_col(colour, 1.15),
+                           (int(rect.w * 0.7), -int(rect.w * 0.1)), int(rect.w * 0.35))
+        pygame.draw.circle(surface, methods.modify_col(colour, 1.2),
+                           (int(rect.w * 0.7), -int(rect.w * 0.1)), int(rect.w * 0.25))
+        pygame.draw.circle(surface, methods.modify_col(colour, 1.25),
+                           (int(rect.w * 0.7), -int(rect.w * 0.1)), int(rect.w * 0.15))
+
+    elif commons.widget_box_style == WidgetBoxStyle.GRADIENT_2:
+        pygame.draw.rect(surface, methods.modify_col(colour, 1.15), Rect(2, int(rect.h * 0.15), rect.w - 4, int(rect.h * 0.75)))
+        pygame.draw.rect(surface, methods.modify_col(colour, 1.2), Rect(4, int(rect.h * 0.2), rect.w - 8, int(rect.h * 0.65)))
+        pygame.draw.rect(surface, methods.modify_col(colour, 1.25), Rect(5, int(rect.h * 0.25), rect.w - 10, int(rect.h * 0.55)))
+        pygame.draw.rect(surface, methods.modify_col(colour, 1.25), Rect(0, 0, rect.w, 4))
+
+    elif commons.widget_box_style == WidgetBoxStyle.SHEEN:
+        if rect.w > 100:
+            sheen_points = [
+                (int(rect.w - 5), rect.h),
+                (int(rect.w - 5 - 15), 0),
+                (int(rect.w - 5 - 30), 0),
+                (int(rect.w - 5 - 15), rect.h)
+            ]
+
+            pygame.draw.polygon(surface, methods.modify_col(colour, 1.7), sheen_points)
+
+            sheen_points = [
+                (int(rect.w - 30), rect.h),
+                (int(rect.w - 30 - 15), 0),
+                (int(rect.w - 30 - 20), 0),
+                (int(rect.w - 30 - 5), rect.h)
+            ]
+
+            pygame.draw.polygon(surface, methods.modify_col(colour, 1.7), sheen_points)
+
+    elif commons.widget_box_style == WidgetBoxStyle.TOP_BOT:
+        pass
+
+    pygame.draw.rect(surface, methods.modify_col(colour, 1.55), Rect(0, 0, rect.w, 2))
+    pygame.draw.rect(surface, methods.modify_col(colour, 0.7), Rect(0, rect.h - 2, rect.w, 2))
 
 
 class WidgetLine:
@@ -89,12 +141,15 @@ class Widget:
         self.widget_id = widget_id
         self.type = WidgetType.BASE
         self.base_type = WidgetBaseType.OBJECT
-        self.surface = None
+        self.surface = pygame.Surface((0, 0))
         self.rect = Rect(0, 0, 0, 0)
         self.global_rect = None
 
         self.true_hidden = True
         self.hidden = self.true_hidden
+
+        self.true_active = True
+        self.active = self.true_active
 
         self.selected = False
 
@@ -106,59 +161,20 @@ class Widget:
     def draw(self, relative_position, scroll_offset, container_rect):
         pass
 
-    def render_accents(self, colour):
-        self.surface.fill(colour)
-
-        if commons.widget_box_style == WidgetBoxStyle.GRADIENT_1:
-            pygame.draw.circle(self.surface, methods.modify_col(colour, 1.05),
-                               (int(self.rect.w * 0.7), -int(self.rect.w * 0.1)), int(self.rect.w * 0.55))
-            pygame.draw.circle(self.surface, methods.modify_col(colour, 1.1),
-                               (int(self.rect.w * 0.7), -int(self.rect.w * 0.1)), int(self.rect.w * 0.45))
-            pygame.draw.circle(self.surface, methods.modify_col(colour, 1.15),
-                               (int(self.rect.w * 0.7), -int(self.rect.w * 0.1)), int(self.rect.w * 0.35))
-            pygame.draw.circle(self.surface, methods.modify_col(colour, 1.2),
-                               (int(self.rect.w * 0.7), -int(self.rect.w * 0.1)), int(self.rect.w * 0.25))
-            pygame.draw.circle(self.surface, methods.modify_col(colour, 1.25),
-                               (int(self.rect.w * 0.7), -int(self.rect.w * 0.1)), int(self.rect.w * 0.15))
-
-        elif commons.widget_box_style == WidgetBoxStyle.GRADIENT_2:
-            pygame.draw.rect(self.surface, methods.modify_col(colour, 1.15), Rect(2, int(self.rect.h * 0.15), self.rect.w - 4, int(self.rect.h * 0.75)))
-            pygame.draw.rect(self.surface, methods.modify_col(colour, 1.2), Rect(4, int(self.rect.h * 0.2), self.rect.w - 8, int(self.rect.h * 0.65)))
-            pygame.draw.rect(self.surface, methods.modify_col(colour, 1.25), Rect(5, int(self.rect.h * 0.25), self.rect.w - 10, int(self.rect.h * 0.55)))
-            pygame.draw.rect(self.surface, methods.modify_col(colour, 1.25), Rect(0, 0, self.rect.w, 4))
-
-        elif commons.widget_box_style == WidgetBoxStyle.SHEEN:
-            if self.rect.w > 100:
-                sheen_points = [
-                    (int(self.rect.w - 5), self.rect.h),
-                    (int(self.rect.w - 5 - 15), 0),
-                    (int(self.rect.w - 5 - 30), 0),
-                    (int(self.rect.w - 5 - 15), self.rect.h)
-                ]
-
-                pygame.draw.polygon(self.surface, methods.modify_col(colour, 1.7), sheen_points)
-
-                sheen_points = [
-                    (int(self.rect.w - 30), self.rect.h),
-                    (int(self.rect.w - 30 - 15), 0),
-                    (int(self.rect.w - 30 - 20), 0),
-                    (int(self.rect.w - 30 - 5), self.rect.h)
-                ]
-
-                pygame.draw.polygon(self.surface, methods.modify_col(colour, 1.7), sheen_points)
-
-        elif commons.widget_box_style == WidgetBoxStyle.TOP_BOT:
-            pass
-
-        pygame.draw.rect(self.surface, methods.modify_col(colour, 1.55), Rect(0, 0, self.rect.w, 2))
-        pygame.draw.rect(self.surface, methods.modify_col(colour, 0.7), Rect(0, self.rect.h - 2, self.rect.w, 2))
-
     def render_to_surface(self, surface):
         if not self.hidden:
             surface.blit(self.surface, (self.rect.x, self.rect.y))
 
     def process_event(self, event):
         return False
+
+    def deactivate(self):
+        self.active = False
+        self.true_active = False
+
+    def activate(self):
+        self.active = True
+        self.true_active = True
 
     def hide(self):
         self.hidden = True
@@ -178,7 +194,7 @@ class Widget:
         else:
             self.hidden = self.true_hidden
 
-    def late_position_update(self, widget_line, ui_container):
+    def late_position_update(self, widget_line):
         pass
 
     def init_rect(self):
@@ -294,8 +310,100 @@ class TextWidget(Widget):
 
     def render_text(self):
         self.text_surface = self.font.render(self.text, True, self.colour)
-        self.surface = self.text_surface.copy()
+        self.surface = pygame.Surface((self.text_surface.get_width(), self.text_surface.get_height() + commons.widget_padding_y)).convert_alpha()
+        self.surface.fill((0, 0, 0, 0))
+        self.surface.blit(self.text_surface, (0, commons.widget_text_y_offset))
         self.rect = self.surface.get_rect()
+
+
+class WrappedTextWidget(Widget):
+    def __init__(self, widget_id, text, colour=commons.text_col, font=None):
+        super().__init__(widget_id)
+
+        self.type = WidgetType.WRAPPED_TEXT
+        self.text = text
+        self.font = font
+        if self.font is None:
+            self.font = commons.font_20
+        self.colour = colour
+
+        self.text_surface = None
+
+        self.true_hidden = False
+        self.hidden = self.true_hidden
+
+        self.lines = []
+
+        self.below_widgets_line_shift = self.font.size("A")[1]
+
+    def init_rect(self):
+        self.rect = Rect(self.rect.x, self.rect.y, 0, max(self.rect.h, self.font.size("A")[1]))
+
+    def render_text(self):
+        space_width = self.font.size(" ")[0]
+        text_height = self.font.size("A")[1]
+
+        if self.rect.w > 0 and self.rect.h > 0:
+            self.surface = pygame.Surface((self.rect.w, self.rect.h)).convert_alpha()
+            self.surface.fill((0, 0, 0, 0))
+
+            current_y = 0
+            for line in self.lines:
+                current_x = 0
+                for word in line:
+                    text_surface = self.font.render(word, True, self.colour)
+                    self.surface.blit(text_surface, (current_x, current_y))
+                    current_x += self.font.size(word)[0] + space_width
+                current_y += text_height
+
+    def late_position_update(self, widget_line):
+        if self.hidden:
+            return
+
+        words = self.text.split(" ")
+        word_index = 0
+
+        current_x = self.rect.x
+        current_word_on_line = 0
+
+        self.lines = [[]]
+
+        space_width = self.font.size(" ")[0]
+        text_height = self.font.size("A")[1]
+
+        wrap_width = max(self.ui_container.rect.w - self.ui_container.padding_right, self.ui_container.widget_surface_rect.w - self.rect.x)
+
+        longest_line = 0
+
+        while word_index < len(words):
+            word_width = self.font.size(words[word_index])[0]
+            if current_x + word_width > wrap_width and current_word_on_line != 0:
+                self.lines.append([])
+                current_word_on_line = 0
+                longest_line = max(longest_line, current_x - space_width)
+                current_x = self.rect.x
+            else:
+                self.lines[-1].append(words[word_index])
+                current_x += word_width
+                if current_word_on_line == 0 and current_x - self.rect.x > wrap_width or word_index == len(words) - 1:
+                    longest_line = max(longest_line, current_x - self.rect.x)
+                current_x += space_width
+
+                current_word_on_line += 1
+                word_index += 1
+
+        self.rect = Rect(self.rect.x, widget_line.y_pos, longest_line, text_height * len(self.lines))
+
+        if longest_line + self.ui_container.padding_right > self.ui_container.content_size[0]:
+            self.ui_container.content_size[0] = longest_line + self.ui_container.padding_right
+            self.ui_container.update_overflow_data()
+
+        new_below_widgets_line_shift = len(self.lines) * text_height
+
+        if new_below_widgets_line_shift != self.below_widgets_line_shift:
+            self.set_ui_container_update_flag(True)
+
+        self.render_text()
 
 
 class SameLineWidget(Widget):
@@ -318,7 +426,7 @@ class SameLineFillToLineWidget(SameLineWidget):
 
 
 class CheckboxWidget(Widget):
-    def __init__(self, widget_id, size=20, checked=False):
+    def __init__(self, widget_id, size=20, checked=False, selectable=True):
         super().__init__(widget_id)
 
         self.type = WidgetType.CHECKBOX
@@ -330,14 +438,15 @@ class CheckboxWidget(Widget):
         self.size = size
         self.checked = checked
         self.hovered = False
+        self.selectable = selectable
 
         self.true_hidden = False
         self.hidden = self.true_hidden
 
-        self.render_accents(commons.back_col)
+        render_accents(self.surface, commons.back_col)
 
     def frame_update(self, altered_widgets, relative_mouse_pos):
-        if not self.hidden:
+        if not self.hidden and self.selectable:
             self.hovered = False
             if commons.first_mouse_hover and self.rect.collidepoint(*relative_mouse_pos):
                 self.hovered = True
@@ -345,8 +454,11 @@ class CheckboxWidget(Widget):
                 commons.current_cursor = commons.long_boi_cursor
                 if commons.first_mouse_action and pygame.mouse.get_pressed()[0]:
                     commons.first_mouse_action = False
-                    self.checked = not self.checked
+                    self.toggle_checked()
                     altered_widgets.append(self)
+
+    def toggle_checked(self):
+        self.checked = not self.checked
 
     def draw(self, relative_position, scroll_offset, container_rect):
         if not self.hidden:
@@ -373,22 +485,22 @@ class CheckboxWidget(Widget):
                 #                    (relative_position[0] - scroll_offset[0] + self.rect.centerx,
                 #                     relative_position[1] - scroll_offset[1] + self.rect.centery),
                 #                    int(self.size * 0.2), 0)
-                methods.draw_rect_clipped(commons.window, methods.modify_col(commons.back_col, 1.5),
+                methods.draw_rect_clipped(commons.window, methods.modify_col(commons.back_col, 1.7),
                                           Rect(relative_position[0] - scroll_offset[0] + self.rect.x + 5,
                                                relative_position[1] - scroll_offset[1] + self.rect.y + 5,
                                                self.rect.w - 10, self.rect.h - 10), 0,
                                           Rect(relative_position[0],
                                                relative_position[1],
                                                container_rect.w, container_rect.h))
-                methods.draw_rect_clipped(commons.window, methods.modify_col(commons.back_col, 1.8),
+                methods.draw_rect_clipped(commons.window, methods.modify_col(commons.back_col, 2.1),
                                           Rect(relative_position[0] - scroll_offset[0] + self.rect.x + 5,
                                                relative_position[1] - scroll_offset[1] + self.rect.y + 5,
                                                self.rect.w - 10, 2), 0,
                                           Rect(relative_position[0],
                                                relative_position[1],
                                                container_rect.w, container_rect.h))
-                methods.draw_rect_clipped(commons.window, methods.modify_col(commons.back_col, 0.9),
-                                          Rect(relative_position[0] - scroll_offset[0] + self.rect.x + 5 - 1,
+                methods.draw_rect_clipped(commons.window, methods.modify_col(commons.back_col, 1.3),
+                                          Rect(relative_position[0] - scroll_offset[0] + self.rect.x + 5,
                                                relative_position[1] - scroll_offset[1] + self.rect.y + self.rect.h - 5,
                                                self.rect.w - 10, 2), 0,
                                           Rect(relative_position[0],
@@ -428,12 +540,12 @@ class LineSelectorWidget(Widget):
                                            relative_position[1],
                                            container_rect.w, container_rect.h))
 
-    def late_position_update(self, widget_line, ui_container):
-        self.rect = Rect(-5, widget_line.y_pos, ui_container.content_size[0] + 10, widget_line.height)
+    def late_position_update(self, widget_line):
+        self.rect = Rect(-5, widget_line.y_pos, self.ui_container.widget_surface_rect.w + 10, widget_line.height)
 
 
 class ButtonWidget(Widget):
-    def __init__(self, widget_id, text, font=None, text_colour=commons.text_col, border_colour=commons.border_col):
+    def __init__(self, widget_id, text, font=None, text_colour=commons.text_col, border_colour=commons.border_col, fill_to_edge=False):
         super().__init__(widget_id)
 
         self.text = text
@@ -450,14 +562,17 @@ class ButtonWidget(Widget):
 
         self.type = WidgetType.BUTTON
 
+        self.fill_to_edge = fill_to_edge
+
         self.render_surface()
 
-    def render_surface(self):
+    def render_surface(self, create_rect_extents=True):
         text_size = self.font.size(self.text)
-        self.rect = Rect(0, 0, text_size[0] + 6, text_size[1] + 2)
+        if create_rect_extents:
+            self.rect = Rect(self.rect.x, self.rect.y, text_size[0] + 6, text_size[1] + commons.widget_padding_y) # + 2
         self.surface = pygame.Surface((self.rect.w, self.rect.h))
-        self.render_accents(commons.back_col)
-        self.surface.blit(self.font.render(self.text, True, self.text_colour), (4, 0))
+        render_accents(self.surface, commons.back_col)
+        self.surface.blit(self.font.render(self.text, True, self.text_colour), (4, commons.widget_text_y_offset)) # 0
 
     def set_text(self, text):
         self.text = text
@@ -485,6 +600,16 @@ class ButtonWidget(Widget):
                                                relative_position[1],
                                                container_rect.w, container_rect.h))
 
+    def late_position_update(self, widget_line):
+        if self.fill_to_edge:
+            final_width = self.ui_container.widget_surface_rect.w - self.ui_container.padding_right - self.rect.x
+            if self.ui_container.content_overflow[1]:
+                final_width -= commons.y_scroll_bar_spacing
+            final_width = max(self.rect.w, final_width)
+            self.rect = Rect(self.rect.x, self.rect.y, final_width, self.rect.h)
+
+            self.render_surface(create_rect_extents=False)
+
 
 class TextInputType(Enum):
     STRING = 0
@@ -492,6 +617,7 @@ class TextInputType(Enum):
     INT = 2
     INT_TUPLE = 3
     FLOAT_TUPLE = 4
+    INT_TUPLE_LIST = 5
 
 
 class TextInputWidget(Widget):
@@ -538,10 +664,10 @@ class TextInputWidget(Widget):
     def render_surface(self):
         text_size = self.font.size(self.text)
         self.rect.w = max(self.min_widget_size, text_size[0] + 6)
-        self.rect.h = text_size[1] + 2
+        self.rect.h = text_size[1] + commons.widget_padding_y
         self.surface = pygame.Surface((self.rect.w, self.rect.h))
-        self.render_accents(commons.back_col)
-        self.surface.blit(self.font.render(self.text, True, self.text_colour), (4, 0))
+        render_accents(self.surface, commons.back_col)
+        self.surface.blit(self.font.render(self.text, True, self.text_colour), (4, commons.widget_text_y_offset))
 
     def frame_update(self, altered_widgets, relative_mouse_pos):
         if not self.hidden:
@@ -611,16 +737,19 @@ class TextInputWidget(Widget):
         if self.input_type == TextInputType.FLOAT or self.input_type == TextInputType.INT:
             if len(self.text) == 0:
                 self.text = "0"
+
         if self.input_type == TextInputType.FLOAT:
             if self.text == '.':
                 self.text = "0"
             float_val = float(self.text)
             float_val = self.clamp_numeric_value(float_val)
             self.text = str(float_val)
+
         elif self.input_type == TextInputType.INT:
             int_val = int(self.text)
             int_val = self.clamp_numeric_value(int_val)
             self.text = str(int_val)
+
         elif self.input_type == TextInputType.INT_TUPLE:
             new_string = ""
             if self.text == '':
@@ -751,7 +880,7 @@ class BeginCollapseWidget(TextWidget):
         self.type = WidgetType.BEGIN_COLLAPSE
         self.hovered = False
         self.collapsed = collapsed
-        self.use_padding = False
+        self.fill_to_left = True
 
     def frame_update(self, altered_widgets, relative_mouse_pos):
         self.hovered = False
@@ -768,16 +897,19 @@ class BeginCollapseWidget(TextWidget):
         self.collapsed = not self.collapsed
         self.update_collapsed_widgets()
 
-    def update_collapsed_widgets(self, update_after=True):
+    def update_collapsed_widgets(self, update_after=True, start_index=None):
         collapse_depth = 0
         in_current_widget = False
         widgets = self.ui_container.widgets
 
         collapse_stack = [self.collapsed]
 
+        if start_index is None:
+            start_index = 0
+
         index_at_end = 0
 
-        for i in range(len(widgets)):
+        for i in range(start_index, len(widgets)):
             if in_current_widget:
                 # Determine if the widget should be hidden
                 should_collapse = False
@@ -807,38 +939,46 @@ class BeginCollapseWidget(TextWidget):
         return index_at_end
 
     def draw(self, relative_position, scroll_offset, container_rect):
-        if not self.hidden:
-            if self.hovered:
-                methods.draw_rect_clipped(commons.window, commons.hover_border_col,
-                                          Rect(relative_position[0] - scroll_offset[0] + self.rect.x,
-                                               relative_position[1] - scroll_offset[1] + self.rect.y,
-                                               self.rect.w, self.rect.h), 2,
-                                          Rect(relative_position[0],
-                                               relative_position[1],
-                                               container_rect.w, container_rect.h))
+        if self.hovered and not self.hidden:
+            methods.draw_rect_clipped(commons.window, commons.hover_border_col,
+                                      Rect(relative_position[0] - scroll_offset[0] + self.rect.x,
+                                           relative_position[1] - scroll_offset[1] + self.rect.y,
+                                           self.rect.w, self.rect.h), 2,
+                                      Rect(relative_position[0],
+                                           relative_position[1],
+                                           container_rect.w, container_rect.h))
 
-    def late_position_update(self, widget_line, ui_container):
-        if self.use_padding:
-            final_width = ui_container.content_size[0] - self.rect.x - ui_container.padding_right
+    def late_position_update(self, widget_line):
+        if widget_line.num_tabs > 0:
+            self.fill_to_left = False
+
+        if self.fill_to_left:
+            final_width = self.ui_container.widget_surface_rect.w
         else:
-            final_width = ui_container.content_size[0] - self.rect.x + ui_container.padding_left
-        if ui_container.content_overflow[1]:
+            final_width = self.ui_container.widget_surface_rect.w - self.ui_container.padding_left - commons.tab_size * widget_line.num_tabs
+
+        if self.ui_container.content_overflow[1]:
             final_width -= commons.y_scroll_bar_spacing
-        final_width = max(self.rect.w, final_width)
-        if self.use_padding:
-            self.rect = Rect(self.rect.x, widget_line.y_pos, final_width, widget_line.height)
+
+        if self.fill_to_left:
+            self.rect = Rect(0, widget_line.y_pos, final_width, widget_line.height)
         else:
-            self.rect = Rect(self.rect.x - ui_container.padding_left, widget_line.y_pos, final_width, widget_line.height)
+            self.rect = Rect(self.ui_container.padding_left + commons.tab_size * widget_line.num_tabs, widget_line.y_pos, final_width, widget_line.height)
+
         self.render_surface()
 
     def render_surface(self):
         self.surface = pygame.Surface((self.rect.w, self.rect.h))
-        self.render_accents(commons.back_col)
-        self.surface.blit(self.text_surface, (25, 0))
+        render_accents(self.surface, commons.back_col)
+        offset_x = 0
+        if self.fill_to_left:
+            offset_x = self.ui_container.padding_left
+
+        self.surface.blit(self.text_surface, (offset_x + commons.tab_size, commons.widget_text_y_offset))
         if self.collapsed:
-            methods.draw_arrow(self.surface, (11, 12), 10, math.pi * 0.5)
+            methods.draw_arrow(self.surface, (offset_x + commons.tab_size * 0.5, self.rect.h * 0.5), self.rect.h * 0.4, math.pi * 0.5)
         else:
-            methods.draw_arrow(self.surface, (11, 12), 10, math.pi)
+            methods.draw_arrow(self.surface, (offset_x + commons.tab_size * 0.5, self.rect.h * 0.5), self.rect.h * 0.4, math.pi)
 
     def set_text(self, new_text, update_container=False):
         self.text = new_text
@@ -848,7 +988,7 @@ class BeginCollapseWidget(TextWidget):
             self.set_ui_container_update_flag(True)
 
     def init_rect(self):
-        self.rect = Rect(0, 0, self.text_surface.get_width() + 20, self.text_surface.get_height())
+        self.rect = Rect(0, 0, self.text_surface.get_width(), self.text_surface.get_height() + commons.widget_padding_y)
 
 
 class EndCollapseWidget(Widget):
@@ -864,13 +1004,13 @@ class TabWidget(Widget):
         super().__init__("tab")
 
         self.type = WidgetType.TAB
-        self.base_type = WidgetBaseType.SAME_LINE
+        self.base_type = WidgetBaseType.OBJECT
         self.width = width
         self.rect = Rect(0, 0, self.width, 0)
 
 
 class DropDownWidget(Widget):
-    def __init__(self, widget_id, string_list, drop_down_type, initial_string=None, initial_strings=None, font=None, text_colour=commons.text_col, min_widget_length=250):
+    def __init__(self, widget_id, string_list, drop_down_type, initial_string=None, initial_strings=None, element_icons=None, font=None, text_colour=commons.text_col, min_widget_length=250, close_on_select=True):
         super().__init__(widget_id)
 
         self.type = WidgetType.DROP_DOWN
@@ -888,7 +1028,11 @@ class DropDownWidget(Widget):
 
         self.string_list = string_list
         self.selected_strings = initial_strings
+        if self.selected_strings is None:
+            self.selected_strings = []
         self.selected_string = "Error"
+
+        self.close_on_select = close_on_select
 
         if self.drop_down_type == DropDownType.SELECT:
             if initial_string is not None:
@@ -897,41 +1041,76 @@ class DropDownWidget(Widget):
 
         elif self.drop_down_type == DropDownType.MULTISELECT:
             if self.selected_strings is not None:
-                for string in self.selected_strings:
+                for string_index in range(len(self.selected_strings) - 1, -1, -1):
+                    string = self.selected_strings[string_index]
                     if string not in self.string_list:
                         self.selected_strings.remove(string)
 
             self.update_multiselect_string()
+            self.close_on_select = False
 
         elif self.drop_down_type == DropDownType.MENU:
             if initial_string is not None:
                 self.selected_string = initial_string
 
+        height = self.font.size("A")[1] + commons.widget_padding_y
+
+        self.icon_size = height
+        self.element_icons = element_icons
+        if self.element_icons is not None:
+            for element_index in range(len(self.element_icons)):
+                if self.element_icons[element_index] is not None:
+                    new_surf = pygame.Surface((height, height)).convert_alpha()
+                    pygame.transform.scale(self.element_icons[element_index].convert_alpha(), (height, height), new_surf)
+                    self.element_icons[element_index] = new_surf
+
         self.longest_entry_px = self.get_longest_entry()
         self.min_widget_length = min_widget_length
 
-        self.rect = Rect(0, 0, max(self.min_widget_length, self.longest_entry_px + 6 + 30), self.font.size("A")[1] + 2)
+        self.rect = Rect(0, 0, max(self.min_widget_length, self.longest_entry_px + height + 8), height) #  + 6
         self.surface = pygame.Surface((self.rect.w, self.rect.h))
 
         self.drop_down_ui_container = None
 
         self.render_selected_string_box()
 
+    def get_index_of_string(self, string):
+        for index in range(len(self.string_list)):
+            if self.string_list[index] == string:
+                return index
+        return -1
+
     def render_selected_string_box(self):
-        self.render_accents(commons.back_col)
+        render_accents(self.surface, commons.back_col)
+        icon_offset = 0
+        if self.element_icons is not None and self.drop_down_type != DropDownType.MENU:
+            index = self.get_index_of_string(self.selected_string)
+            if index != -1 and index < len(self.element_icons):
+                if self.element_icons[index] is not None:
+                    self.surface.blit(self.element_icons[index], (0, 0))
+            icon_offset = self.icon_size + 2
+
         text_surface = self.font.render(self.selected_string, True, self.text_colour)
-        self.surface.blit(text_surface, (4, 0))
-        pygame.draw.rect(self.surface, self.text_colour, Rect(self.rect.w - 28, 4, 3, self.rect.h - 8), 0)
-        methods.draw_arrow(self.surface, (self.rect.w - 13, 12), 10, math.pi)
+        self.surface.blit(text_surface, (icon_offset + 4, commons.widget_text_y_offset))
+        pygame.draw.rect(self.surface, self.text_colour, Rect(self.rect.w - self.rect.h - 3, 4, 3, self.rect.h - 8), 0)
+        methods.draw_arrow(self.surface, (self.rect.w - self.rect.h * 0.5, self.rect.h * 0.5), self.rect.h * 0.4, math.pi)
         self.rect.w = self.surface.get_width()
         self.rect.h = self.surface.get_height()
 
     def get_longest_entry(self):
         longest_string_px = 0
-        for string in self.string_list:
-            longest_string_px = max(longest_string_px, self.font.size(string)[0])
+        icon_adjust = 0
 
-        longest_string_px = max(longest_string_px, self.font.size(self.selected_string)[0])
+        if self.element_icons is not None and self.drop_down_type != DropDownType.MENU:
+            icon_adjust = self.icon_size + 2
+
+        for string in self.string_list:
+            longest_string_px = max(longest_string_px, self.font.size(string)[0] + icon_adjust + 4)
+
+        if self.drop_down_type == DropDownType.MULTISELECT:
+            longest_string_px += self.font.size("+99 Others")[0]
+
+        longest_string_px = max(longest_string_px, self.font.size(self.selected_string)[0] + icon_adjust)
 
         return longest_string_px
 
@@ -950,7 +1129,7 @@ class DropDownWidget(Widget):
                         global_position = self.ui_container.get_global_position_from_local((self.rect.x, self.rect.y + self.rect.h))
                         self.global_rect = Rect(global_position[0], global_position[1] - self.rect.h, self.rect.w, self.rect.h)
 
-                        target_height = min(260, self.rect.h * len(self.string_list) + 10)
+                        target_height = min(260, self.rect.h * len(self.string_list) + 2)
 
                         selected_x_position = max(0, global_position[0])
                         selected_y_position = global_position[1]
@@ -960,31 +1139,57 @@ class DropDownWidget(Widget):
 
                         space_below = commons.screen_h - self.global_rect.bottom
                         space_above = self.global_rect.top
+                        placing_below = True
 
                         if space_below < target_height:
                             if space_above < target_height:  # Place menu in the area with the most room as it can fit in neither
                                 if space_above > space_below:
                                     selected_y_position = 0
                                     selected_height = space_above
+                                    placing_below = False
                                 else:
                                     selected_height = space_below
 
                             else:  # Place menu above as there is space
                                 selected_y_position = self.global_rect.top - target_height
+                                placing_below = False
 
                         if selected_x_position + self.rect.w > commons.screen_w:
                             selected_width = commons.screen_w - selected_x_position
 
                         self.drop_down_ui_container = UiContainer("drop_down", Rect(selected_x_position, selected_y_position, selected_width, selected_height), self.ui_container)
-                        self.drop_down_ui_container.background_colour = methods.modify_col(commons.back_col, 0.9)
+                        self.drop_down_ui_container.background_colour = methods.modify_col(commons.back_col, 0.9)  # 0.9
                         self.drop_down_ui_container.set_widget_align_type(WidgetAlignType.LEFT)
+                        if placing_below:
+                            self.drop_down_ui_container.set_padding(top=0, left=2, right=2, bot=2)
+                        else:
+                            self.drop_down_ui_container.set_padding(top=2, left=2, right=2, bot=0)
                         self.drop_down_ui_container.make_scrollable(y=True)
                         for string_index in range(len(self.string_list)):
                             self.add_per_element_widgets(string_index, self.string_list[string_index])
+                        self.update_checkbox_statuses()
                         self.drop_down_ui_container.update(None)
 
     def add_per_element_widgets(self, element_index, element_string):
-        self.drop_down_ui_container.add_widget(ButtonWidget(self.widget_id + "_" + element_string.lower().replace(" ", "_"), element_string))
+        element_widget_id = self.widget_id + "_" + element_string.lower().replace(" ", "_")
+
+        if self.element_icons is not None:
+            icon_added = False
+            if element_index < len(self.element_icons):
+                image = self.element_icons[element_index]
+                if image is not None:
+                    self.drop_down_ui_container.add_widget(ImageWidget(element_widget_id + "_icon", image))
+                    self.drop_down_ui_container.add_widget(SameLineWidget(2))
+                    icon_added = True
+
+            if not icon_added:
+                self.drop_down_ui_container.add_widget(TabWidget(self.icon_size + 2))
+
+        if self.drop_down_type == DropDownType.MULTISELECT:
+            self.drop_down_ui_container.add_widget(CheckboxWidget(element_widget_id + "_checkbox", selectable=False))
+            self.drop_down_ui_container.add_widget(SameLineWidget(5))
+
+        self.drop_down_ui_container.add_widget(ButtonWidget(element_widget_id, element_string, fill_to_edge=True, font=self.font))
 
     def process_event(self, event):
         if self.drop_down_ui_container is not None:
@@ -992,6 +1197,15 @@ class DropDownWidget(Widget):
 
         if self.selected:
             commons.first_scroll_action = False
+
+    def update_checkbox_statuses(self):
+        for widget in self.drop_down_ui_container.widgets:
+            if widget.type == WidgetType.CHECKBOX:
+                button_widget = self.drop_down_ui_container.find_widget(widget.widget_id[:-9])
+                if button_widget.text in self.selected_strings:
+                    widget.checked = True
+                else:
+                    widget.checked = False
 
     def draw(self, relative_position, scroll_offset, container_rect):
         if self.hovered or self.selected:
@@ -1023,26 +1237,32 @@ class DropDownWidget(Widget):
             drop_down_altered_widgets = []
             self.drop_down_ui_container.frame_update(drop_down_altered_widgets, ui_container_relative_pos)
             if len(drop_down_altered_widgets) > 0:
-                element_string = drop_down_altered_widgets[0].text
-                if self.drop_down_type == DropDownType.SELECT:
-                    self.selected_string = element_string
+                widget = drop_down_altered_widgets[0]
+                if widget.type == WidgetType.BUTTON:
+                    element_string = widget.text
+                    if self.drop_down_type == DropDownType.SELECT:
+                        self.selected_string = element_string
 
-                elif self.drop_down_type == DropDownType.MULTISELECT:
-                    if element_string not in self.selected_strings:
-                        self.selected_strings.append(element_string)
-                    else:
-                        self.selected_strings.remove(element_string)
+                    elif self.drop_down_type == DropDownType.MULTISELECT:
+                        if element_string not in self.selected_strings:
+                            self.selected_strings.append(element_string)
+                        else:
+                            self.selected_strings.remove(element_string)
 
-                    self.update_multiselect_string()
+                        self.update_multiselect_string()
+                        self.update_checkbox_statuses()
 
-                elif self.drop_down_type == DropDownType.MENU:
-                    altered_widgets.append(drop_down_altered_widgets[0])
+                    elif self.drop_down_type == DropDownType.MENU:
+                        altered_widgets.append(drop_down_altered_widgets[0])
 
-                self.render_selected_string_box()
-                self.deselect()
-                self.drop_down_ui_container = None
-                altered_widgets.append(self)
-                self.set_ui_container_update_flag(True)
+                    self.render_selected_string_box()
+
+                    if self.close_on_select:
+                        self.deselect()
+                        self.drop_down_ui_container = None
+
+                    altered_widgets.append(self)
+                    self.set_ui_container_update_flag(True)
 
             if hovering_drop_down_list and commons.first_mouse_hover:
                 commons.first_mouse_hover = False
@@ -1058,10 +1278,15 @@ class DropDownWidget(Widget):
             commons.global_widget = None
 
     def update_multiselect_string(self):
-        num_strings = len(self.selected_strings)
-        if num_strings > 1:
-            self.selected_string = self.selected_strings[0] + " +" + str(len(self.selected_strings))
-        elif num_strings == 1:
-            self.selected_string = self.selected_strings[0]
+        if self.selected_strings is not None:
+            num_strings = len(self.selected_strings)
+            if num_strings > 2:
+                self.selected_string = self.selected_strings[0] + " +" + str(num_strings - 1) + " Others"
+            elif num_strings == 2:
+                self.selected_string = self.selected_strings[0] + " +" + str(num_strings - 1) + " Other"
+            elif num_strings == 1:
+                self.selected_string = self.selected_strings[0]
+            else:
+                self.selected_string = "None Selected"
         else:
             self.selected_string = "None Selected"
